@@ -167,11 +167,8 @@ export default function App() {
   };
 
   const handleIWon = () => {
-    // kick everyone else
-    setPlayers(prev => prev.map((p, i) => i === curGlobalIdx ? p : {...p, alive: false}));
-    setWinner(players[curGlobalIdx]?.name);
-    setPopup(null);
-    clearInterval(intervalRef.current);
+    // kick the current player out (they won their round and leave)
+    kickPlayer(curGlobalIdx);
   };
 
   const handleKickSomeone = () => {
