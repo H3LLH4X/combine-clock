@@ -5,8 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { width: 100%; overflow-x: hidden; background: #0d0d14; }
+      /* Ensure the browser document takes up 100% of the screen space */
+      html, body, #root { 
+        width: 100%; 
+        height: 100%; 
+        margin: 0; 
+        padding: 0; 
+        overflow: hidden; 
+        background: #050508; 
+      }
     </style>
     <title>Clock</title>
   </head>

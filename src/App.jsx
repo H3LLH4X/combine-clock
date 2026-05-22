@@ -22,7 +22,7 @@ function SetupScreen({ onStart }) {
   const [mins, setMins] = useState(5);
   const [names, setNames] = useState(["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6"]);
   return (
-    <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem"}}>
+    <div style={{width:"100%",height:"100%",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box"}}>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <div style={{fontSize:48,letterSpacing:4,color:"#fff",fontWeight:900}}>DHAPPA</div>
@@ -62,7 +62,7 @@ export default function App() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [times, setTimes] = useState([]);
   const [paused, setPaused] = useState(true);
-  const [started, setStarted] = useState(false);
+  const [started, setFalse] = useState(false);
 
   const [popup, setPopup] = useState(null); 
   const [kickTarget, setKickTarget] = useState(null);
@@ -71,8 +71,7 @@ export default function App() {
   const intervalRef = useRef(null);
   const svgRef = useRef(null);
   
-  // Track continuous screen metrics separately
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const arcRotationRef = useRef(0); 
   const [arcRotation, setArcRotation] = useState(0);
   const [centerHovered, setCenterHovered] = useState(false);
@@ -81,7 +80,6 @@ export default function App() {
     const update = () => {
       setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
-    update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
@@ -92,7 +90,7 @@ export default function App() {
     setTimes(Array(n).fill(secs));
     setActiveIdx(0);
     setPaused(true);
-    setStarted(false);
+    setFalse(false);
     setWinner(null);
     setPopup(null);
     setConfig({n, secs, names});
@@ -135,17 +133,17 @@ export default function App() {
     if (delta > 180) delta -= 360;
     arcRotationRef.current = arcRotationRef.current + delta;
     setArcRotation(arcRotationRef.current);
-  }, [activeIdx, players, started]);
+  }, [activeIdx, players, started, aliveIndices, curGlobalIdx]);
 
   useEffect(() => {
     if (!started || !players.length) return;
     if (times[curGlobalIdx] <= 0) {
-      kickPlayer(curGlobalIdx, true);
+      kickPlayer(curGlobalIdx);
     }
   }, [times, started, players, curGlobalIdx]);
 
   const passToNext = useCallback((fromGlobal) => {
-    if (!started) { setStarted(true); setPaused(false); return; }
+    if (!started) { setFalse(true); setPaused(false); return; }
     if (paused || winner || popup) return;
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
@@ -208,14 +206,13 @@ export default function App() {
 
   if (!config) return <SetupScreen onStart={startGame} />;
 
-  // Dynamic layout calculations centered on real-time screen width and height
   const cx = dimensions.width / 2;
   const cy = dimensions.height / 2;
   const baseScale = Math.min(dimensions.width, dimensions.height);
   
   const centerR = baseScale * 0.24;
-  // Make outer radius massive so it safely bursts past screen margins cleanly
-  const outerR = Math.max(dimensions.width, dimensions.height) * 1.2;
+  // Make outer radius massive so it bleeds completely past screens corners smoothly
+  const outerR = Math.max(dimensions.width, dimensions.height) * 1.5; 
   const timeR = baseScale * 0.385;
 
   const n = aliveCount;
@@ -228,7 +225,7 @@ export default function App() {
 
   if (winner) {
     return (
-      <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+      <div style={{width:"100%",height:"100%",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
         <div style={{textAlign:"center"}}>
           <div style={{fontSize:80,marginBottom:16}}>💀</div>
           <div style={{color:"#555",fontSize:13,letterSpacing:4,marginBottom:8}}>LAST PLAYER STANDING</div>
@@ -241,19 +238,19 @@ export default function App() {
   }
 
   return (
-    <div style={{background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
+    <div style={{width:"100%",height:"100%",background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflow:"hidden",position:"relative"}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');`}</style>
 
-      <div style={{position:"relative",width:"100vw",height:"100vh",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",boxSizing:"border-box"}}>
+      {/* Main Clock Area */}
+      <div style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
           <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
             {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
           </div>
         </div>
 
-        {/* Dynamic dynamic ViewBox parameters map to actual scale */}
-        <svg width="100%" height="100%" viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} ref={svgRef} style={{display:"block",position:"absolute",inset:0}}>
+        <svg width="100%" height="100%" viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} ref={svgRef} style={{display:"block"}}>
           <rect x={0} y={0} width={dimensions.width} height={dimensions.height} fill="#050508" />
 
           {alivePlayers.map((player, i) => {
@@ -413,23 +410,20 @@ export default function App() {
             </div>
           </div>
         )}
-        {!popup && (
-          <div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",color:"#333",fontSize:10,letterSpacing:3,pointerEvents:"none",zIndex:10}}>SCROLL FOR CONTROLS ↓</div>
-        )}
-
       </div>
 
-      <div style={{width:"100%",display:"flex",gap:12,padding:"16px 20px 32px",boxSizing:"border-box",background:"#050508"}}>
+      {/* Persistent Action Dashboard at the base screen layer */}
+      <div style={{position:"absolute",bottom:0,left:0,right:0,height:94,display:"flex",gap:12,padding:"14px 20px 24px",boxSizing:"border-box",background:"#050508",borderTop:"1px solid #111"}}>
         <button onClick={() => {
-          if (!started) { setStarted(true); setPaused(false); return; }
+          if (!started) { setFalse(true); setPaused(false); return; }
           passToNext(curGlobalIdx);
         }} disabled={!!winner}
-          style={{flex:2,padding:"18px 0",borderRadius:14,background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22",border:`2px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
+          style={{flex:2,padding:"0",borderRadius:14,background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22",border:`2px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
           {started ? "PASS →" : "START / PASS →"}
         </button>
         <button onClick={() => { if(started) setPaused(p=>!p); }}
           disabled={!started || !!winner}
-          style={{flex:1,padding:"18px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
+          style={{flex:1,padding:"0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
           {paused?"▶ GO":"⏸ PAUSE"}
         </button>
       </div>
