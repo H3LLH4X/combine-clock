@@ -22,7 +22,7 @@ function SetupScreen({ onStart }) {
   const [mins, setMins] = useState(5);
   const [names, setNames] = useState(["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6"]);
   return (
-    <div style={{width:"100%",height:"100%",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box"}}>
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box"}}>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:32}}>
           <div style={{fontSize:48,letterSpacing:4,color:"#fff",fontWeight:900}}>DHAPPA</div>
@@ -41,14 +41,34 @@ function SetupScreen({ onStart }) {
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>MINUTES PER PLAYER</div>
             <input type="number" min={1} max={60} value={mins} onChange={e=>setMins(Number(e.target.value))} style={{width:"100%",background:"#050508",border:"1px solid #222",borderRadius:8,padding:"10px 14px",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:18,outline:"none",boxSizing:"border-box"}} />
           </div>
+
+          {/* UPDATED SECTION: Names are now displayed as a clean vertical list */}
           <div style={{marginBottom:24}}>
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>NAMES</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div style={{display:"flex", flexDirection:"column", gap:10, maxHeight:"240px", overflowY:"auto", paddingRight:4}}>
               {Array.from({length:n},(_,i)=>(
-                <input key={i} value={names[i]} onChange={e=>setNames(arr=>arr.map((v,j)=>j===i?e.target.value:v))} style={{background:"#050508",border:`1px solid ${COLORS[i]}55`,borderLeft:`3px solid ${COLORS[i]}`,borderRadius:6,padding:"8px 10px",color:COLORS[i],fontFamily:"'Courier New',monospace",fontSize:13,outline:"none"}} />
+                <input 
+                  key={i} 
+                  value={names[i]} 
+                  onChange={e=>setNames(arr=>arr.map((v,j)=>j===i?e.target.value:v))} 
+                  style={{
+                    width: "100%",
+                    background:"#050508",
+                    border:`1px solid ${COLORS[i]}55`,
+                    borderLeft:`4px solid ${COLORS[i]}`,
+                    borderRadius:6,
+                    padding:"10px 14px",
+                    color:COLORS[i],
+                    fontFamily:"'Courier New',monospace",
+                    fontSize:14,
+                    outline:"none",
+                    boxSizing:"border-box"
+                  }} 
+                />
               ))}
             </div>
           </div>
+
           <button onClick={()=>onStart({n,secs:mins*60,names:names.slice(0,n)})} style={{width:"100%",padding:14,borderRadius:12,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,letterSpacing:2,cursor:"pointer"}}>START →</button>
         </div>
       </div>
