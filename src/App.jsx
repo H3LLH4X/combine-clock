@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const COLORS = ["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
 const DARK =   ["#cc2222","#cc9900","#1e8c3a","#1155cc","#7722cc","#cc5500"];
+const VDARK =  ["#3a0000","#3a2800","#003a10","#00103a","#1a003a","#3a1500"];
 const INITIAL_TIME = 5 * 60;
 
 function formatTime(s) {
@@ -86,7 +87,7 @@ export default function App() {
   }, []);
 
   const startGame = useCallback(({n, secs, names}) => {
-    const ps = names.map((name, i) => ({name, color: COLORS[i], dark: DARK[i], alive: true, originalIdx: i}));
+    const ps = names.map((name, i) => ({name, color: COLORS[i], dark: DARK[i], vdark: VDARK[i], alive: true, originalIdx: i}));
     setPlayers(ps);
     setTimes(Array(n).fill(secs));
     setActiveIdx(0);
@@ -228,9 +229,8 @@ export default function App() {
   const rotOffset = -Math.PI / 2;
 
   // DHAPPA text: fill the circle — "DHAPPA" is 6 chars, diameter = 2*centerR
-  const dhappaFontSize = (centerR * 2 * 0.82) / 6;
-  // Timer text: sector width shrinks as n increases; scale accordingly
-  const timerFontSize = svgSize * (n <= 2 ? 0.11 : n <= 3 ? 0.09 : n <= 4 ? 0.075 : 0.062);
+  const dhappaFontSize = (centerR * 2 * 0.95) / 6;
+  const timerFontSize = svgSize * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
 
   // Compute sector midpoint angles (between polygon vertices, for player regions)
   // Players are arranged CCW, so sector i is between vertex i and vertex i-1 (CCW)
@@ -265,19 +265,23 @@ export default function App() {
     );
   }
 
-  return (
-    <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto"}}>
-      {/* Top bar */}
-      <div style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",boxSizing:"border-box"}}>
-        <button onClick={()=>setConfig(null)} style={{background:"none",border:"1px solid #222",borderRadius:8,color:"#444",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2}}>← SETUP</button>
-        <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
-          {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
-        </div>
-      </div>
 
-      {/* Main SVG clock — fixed square */}
-      <div style={{position:"relative",width:svgSize,height:svgSize}}>
-        <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} ref={svgRef} style={{display:"block"}}>
+  return (
+    <div style={{background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');`}</style>
+
+      {/* Clock fills the full viewport */}
+      <div style={{position:"relative",width:"100vw",height:"100vh",overflow:"hidden"}}>
+        {/* Top bar — floated over the clock */}
+        <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",boxSizing:"border-box"}}>
+          <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
+          <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
+            {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
+          </div>
+        </div>
+
+        {/* SVG fills the viewport square */}
+        <svg width="100%" height="100%" viewBox={`0 0 ${svgSize} ${svgSize}`} ref={svgRef} style={{display:"block",position:"absolute",inset:0}}>
           {/* Background fills full SVG */}
           <rect x={0} y={0} width={svgSize} height={svgSize} fill="#050508" />
 
@@ -300,7 +304,7 @@ export default function App() {
             const path = `M ${xc1} ${yc1} L ${x1} ${y1} A ${edgeR} ${edgeR} 0 ${largeArc} 1 ${x2} ${y2} L ${xc2} ${yc2} A ${centerR} ${centerR} 0 ${largeArc} 0 ${xc1} ${yc1} Z`;
             const pct = times[globalIdx] / config.secs;
             const isLow = pct < 0.2;
-            const fillAlpha = isActive ? "ee" : "99";
+            const fillAlpha = isActive ? "ff" : "cc";
             const fillColor = isLow ? "#FF6B6B" : player.color;
             const isKickHighlight = highlightKick && globalIdx !== curGlobalIdx;
             return (
@@ -308,8 +312,8 @@ export default function App() {
                 if (popup === "kick") { handleSelectKick(globalIdx); return; }
                 if (globalIdx === curGlobalIdx && !popup) passToNext(globalIdx);
               }} style={{cursor: popup === "kick" ? "pointer" : globalIdx === curGlobalIdx ? "pointer" : "default"}}>
-                <path d={path} fill={`${fillColor}${isKickHighlight ? "bb" : fillAlpha}`}
-                  stroke={isActive ? `${fillColor}88` : "#0f0f20"} strokeWidth={isActive ? 2 : 1}
+                <path d={path} fill={`${fillColor}${isKickHighlight ? "dd" : fillAlpha}`}
+                  stroke={isActive ? `${fillColor}` : "#0f0f20"} strokeWidth={isActive ? 2 : 1}
                   style={{transition:"all .3s"}}
                 />
                 {/* Time display rotated away from center */}
@@ -323,14 +327,11 @@ export default function App() {
                   // rotate so text base faces outward (top of text points away from center)
                   const deg = (midAngle * 180 / Math.PI) - 90;
                   const t = times[globalIdx];
-                  const dispColor = isLow ? "#5a0000" : isActive ? player.dark : player.dark + "cc";
+                  const dispColor = isLow ? "#3a0000" : player.vdark;
                   return (
                     <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
-                      <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} stroke="#fff" strokeWidth={svgSize * 0.004} paintOrder="stroke" fontFamily="'Courier New',monospace" style={{letterSpacing:1}}>
+                      <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="'Quantico', cursive" style={{letterSpacing:1}}>
                         {formatTime(t)}
-                      </text>
-                      <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.028} fill={isActive ? "#111" : "#222"} fontFamily="'Courier New',monospace" dy={svgSize * 0.048}>
-                        {player.name}
                       </text>
                       {isKickHighlight && (
                         <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.022} fill="#FF6B6B" fontFamily="'Courier New',monospace" dy={svgSize * 0.06}>TAP TO KICK</text>
@@ -377,6 +378,43 @@ export default function App() {
             );
           })()}
 
+          {/* Player names curved along the center circle border */}
+          <defs>
+            {alivePlayers.map((player, i) => {
+              const a1 = (2 * Math.PI * i / n) + rotOffset;
+              const a2 = (2 * Math.PI * ((i + 1) % n) / n) + rotOffset;
+              let sa = a1, ea = a2;
+              if (ea < sa) ea += 2 * Math.PI;
+              const mid = (sa + ea) / 2;
+              // Arc goes from slightly before mid to slightly after, centered
+              const halfArc = Math.PI * 0.18;
+              const arcA1 = mid - halfArc;
+              const arcA2 = mid + halfArc;
+              const nr = centerR + svgSize * 0.008;
+              const sx = cx + nr * Math.cos(arcA1);
+              const sy = cy + nr * Math.sin(arcA1);
+              const ex = cx + nr * Math.cos(arcA2);
+              const ey = cy + nr * Math.sin(arcA2);
+              return (
+                <path key={`namepath-${i}`} id={`namepath-${i}`}
+                  d={`M ${sx} ${sy} A ${nr} ${nr} 0 0 1 ${ex} ${ey}`}
+                  fill="none" />
+              );
+            })}
+          </defs>
+          {alivePlayers.map((player, i) => {
+            const globalIdx = players.indexOf(player);
+            const isActive = globalIdx === curGlobalIdx;
+            const fillColor = player.color;
+            return (
+              <text key={`name-${i}`} fontFamily="'Courier New',monospace" fontSize={svgSize * 0.022} fontWeight={900} fill={isActive ? "#fff" : fillColor}>
+                <textPath href={`#namepath-${i}`} startOffset="50%" textAnchor="middle">
+                  {player.name}
+                </textPath>
+              </text>
+            );
+          })}
+
           {/* DHAPPA label */}
           <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize} fontWeight={900} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
             DHAPPA
@@ -415,20 +453,25 @@ export default function App() {
             </div>
           </div>
         )}
-      </div>
+        {/* Scroll hint */}
+        {!popup && (
+          <div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",color:"#333",fontSize:10,letterSpacing:3,pointerEvents:"none",zIndex:10}}>SCROLL FOR CONTROLS ↓</div>
+        )}
 
-      {/* Bottom controls */}
-      <div style={{width:"100%",display:"flex",gap:12,padding:"12px 20px 24px",boxSizing:"border-box"}}>
+      </div>{/* end fullscreen clock */}
+
+      {/* Bottom controls — below the fold, revealed by scrolling */}
+      <div style={{width:"100%",display:"flex",gap:12,padding:"16px 20px 32px",boxSizing:"border-box",background:"#050508"}}>
         <button onClick={() => {
           if (!started) { setStarted(true); setPaused(false); return; }
           passToNext(curGlobalIdx);
         }} disabled={!!winner}
-          style={{flex:2,padding:"16px 0",borderRadius:14,background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22",border:`2px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
+          style={{flex:2,padding:"18px 0",borderRadius:14,background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22",border:`2px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
           {started ? "PASS →" : "START / PASS →"}
         </button>
         <button onClick={() => { if(started) setPaused(p=>!p); }}
           disabled={!started || !!winner}
-          style={{flex:1,padding:"16px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
+          style={{flex:1,padding:"18px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
           {paused?"▶ GO":"⏸ PAUSE"}
         </button>
       </div>
