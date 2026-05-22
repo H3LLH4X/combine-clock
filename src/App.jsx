@@ -228,10 +228,13 @@ export default function App() {
   const isPortrait = dimensions.height > dimensions.width;
   const cx = dimensions.width / 2;
   
-  // Clean alignment shift down so the clock wheel elements sit perfectly inside the viewport
-  const cy = isPortrait ? (dimensions.width / 2) + 60 : dimensions.height / 2;
-  const baseScale = Math.min(dimensions.width, dimensions.height);
+  // Dynamic height configuration setup to maintain screen ratios cleanly
+  const portraitSvgHeight = Math.max(dimensions.height - 94, dimensions.width + 120);
   
+  // FIX: Anchor the cy center position beautifully to the midpoint of its rendering view
+  const cy = isPortrait ? portraitSvgHeight / 2 : dimensions.height / 2;
+  
+  const baseScale = Math.min(dimensions.width, dimensions.height);
   const centerR = baseScale * 0.24;
   const outerR = Math.max(dimensions.width, dimensions.height) * 2.0; 
   const timeR = baseScale * 0.385;
@@ -258,15 +261,11 @@ export default function App() {
     );
   }
 
-  // Calculate the portrait SVG size to ensure full backdrop coverage
-  const portraitSvgHeight = Math.max(dimensions.height - 94, dimensions.width + 140);
-
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
         
-        /* Force container height properties to expand dynamically when portrait view overflows */
         @media (orientation: portrait) {
           .app-container {
             overflow-y: auto !important;
