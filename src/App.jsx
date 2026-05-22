@@ -225,14 +225,15 @@ export default function App() {
 
   if (!config) return <SetupScreen onStart={startGame} />;
 
-  // In portrait orientation, let the app scale based on width to avoid clipping controls
   const isPortrait = dimensions.height > dimensions.width;
   const cx = dimensions.width / 2;
-  const cy = isPortrait ? dimensions.width / 2 + 40 : dimensions.height / 2;
+  
+  // Clean alignment shift down so the clock wheel elements sit perfectly inside the viewport
+  const cy = isPortrait ? (dimensions.width / 2) + 60 : dimensions.height / 2;
   const baseScale = Math.min(dimensions.width, dimensions.height);
   
   const centerR = baseScale * 0.24;
-  const outerR = Math.max(dimensions.width, dimensions.height) * 1.5; 
+  const outerR = Math.max(dimensions.width, dimensions.height) * 2.0; 
   const timeR = baseScale * 0.385;
 
   const n = aliveCount;
@@ -257,30 +258,36 @@ export default function App() {
     );
   }
 
+  // Calculate the portrait SVG size to ensure full backdrop coverage
+  const portraitSvgHeight = Math.max(dimensions.height - 94, dimensions.width + 140);
+
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
-      {/* Dynamic styles to enable smooth scrolling exclusively in Portrait orientation */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        
+        /* Force container height properties to expand dynamically when portrait view overflows */
         @media (orientation: portrait) {
           .app-container {
             overflow-y: auto !important;
+            overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
           }
           .clock-view-wrapper {
             position: relative !important;
-            height: ${dimensions.width + 120}px !important;
+            width: 100% !important;
+            height: ${portraitSvgHeight}px !important;
           }
           .action-dashboard {
             position: relative !important;
-            height: 120px !important;
-            padding-bottom: 40px !important;
+            height: 100px !important;
+            margin-top: 0 !important;
           }
         }
       `}</style>
 
       {/* Main Clock Area */}
-      <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden"}}>
+      <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden",background:"#050508"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
           <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
@@ -288,8 +295,8 @@ export default function App() {
           </div>
         </div>
 
-        <svg width="100%" height={isPortrait ? dimensions.width + 120 : "100%"} viewBox={`0 0 ${dimensions.width} ${isPortrait ? dimensions.width + 120 : dimensions.height}`} ref={svgRef} style={{display:"block"}}>
-          <rect x={0} y={0} width={dimensions.width} height={isPortrait ? dimensions.width + 120 : dimensions.height} fill="#050508" />
+        <svg width="100%" height={isPortrait ? portraitSvgHeight : "100%"} viewBox={`0 0 ${dimensions.width} ${isPortrait ? portraitSvgHeight : dimensions.height}`} ref={svgRef} style={{display:"block"}}>
+          <rect x={0} y={0} width={dimensions.width} height={isPortrait ? portraitSvgHeight : dimensions.height} fill="#050508" />
 
           {alivePlayers.map((player, i) => {
             const globalIdx = players.indexOf(player);
@@ -401,14 +408,19 @@ export default function App() {
               );
             })}
           </defs>
+          
           {alivePlayers.map((player, i) => {
-            const globalIdx = players.indexOf(player);
-            const isActive = globalIdx === curGlobalIdx;
-            const fillColor = player.color;
             return (
-              <text key={`name-${i}`} fontFamily="'Courier New',monospace" fontSize={baseScale * 0.022} fontWeight={900} fill={isActive ? "#fff" : fillColor}>
+              <text 
+                key={`name-${i}`} 
+                fontFamily="'Quantico', sans-serif" 
+                fontSize={baseScale * 0.024} 
+                fontWeight={700} 
+                fill="#000000"
+                style={{ letterSpacing: "1px" }}
+              >
                 <textPath href={`#namepath-${i}`} startOffset="50%" textAnchor="middle">
-                  {player.name}
+                  {player.name.toUpperCase()}
                 </textPath>
               </text>
             );
