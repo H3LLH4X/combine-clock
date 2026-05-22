@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
 const COLORS = ["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
-const DARK = ["#cc4444","#ccaa00","#3a9944","#1a66cc","#8833cc","#cc6600"];
+const DARK =   ["#cc2222","#cc9900","#1e8c3a","#1155cc","#7722cc","#cc5500"];
 const INITIAL_TIME = 5 * 60;
 
 function formatTime(s) {
@@ -22,30 +22,30 @@ function SetupScreen({ onStart }) {
   const [mins, setMins] = useState(5);
   const [names, setNames] = useState(["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6"]);
   return (
-    <div style={{minHeight:"100vh",background:"#0d0d14",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem"}}>
+    <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem"}}>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{fontSize:48,letterSpacing:4,color:"#fff",fontWeight:900,textShadow:"0 0 40px #FF6B6B88"}}>DHAPPA</div>
+          <div style={{fontSize:48,letterSpacing:4,color:"#fff",fontWeight:900}}>DHAPPA</div>
           <div style={{color:"#555",fontSize:12,letterSpacing:6,marginTop:4}}>MULTIPLAYER CLOCK</div>
         </div>
-        <div style={{background:"#13131f",border:"1px solid #222",borderRadius:16,padding:28}}>
+        <div style={{background:"#0a0a14",border:"1px solid #222",borderRadius:16,padding:28}}>
           <div style={{marginBottom:20}}>
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>PLAYERS</div>
             <div style={{display:"flex",gap:8}}>
               {[2,3,4,5,6].map(v=>(
-                <button key={v} onClick={()=>setN(v)} style={{flex:1,padding:"10px 0",borderRadius:10,border:n===v?`2px solid ${COLORS[v-2]}`:"1px solid #222",background:n===v?`${COLORS[v-2]}22`:"#0d0d14",color:n===v?COLORS[v-2]:"#444",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",transition:"all .15s"}}>{v}</button>
+                <button key={v} onClick={()=>setN(v)} style={{flex:1,padding:"10px 0",borderRadius:10,border:n===v?`2px solid ${COLORS[v-2]}`:"1px solid #222",background:n===v?`${COLORS[v-2]}22`:"#050508",color:n===v?COLORS[v-2]:"#444",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",transition:"all .15s"}}>{v}</button>
               ))}
             </div>
           </div>
           <div style={{marginBottom:20}}>
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>MINUTES PER PLAYER</div>
-            <input type="number" min={1} max={60} value={mins} onChange={e=>setMins(Number(e.target.value))} style={{width:"100%",background:"#0d0d14",border:"1px solid #222",borderRadius:8,padding:"10px 14px",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:18,outline:"none",boxSizing:"border-box"}} />
+            <input type="number" min={1} max={60} value={mins} onChange={e=>setMins(Number(e.target.value))} style={{width:"100%",background:"#050508",border:"1px solid #222",borderRadius:8,padding:"10px 14px",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:18,outline:"none",boxSizing:"border-box"}} />
           </div>
           <div style={{marginBottom:24}}>
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>NAMES</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
               {Array.from({length:n},(_,i)=>(
-                <input key={i} value={names[i]} onChange={e=>setNames(arr=>arr.map((v,j)=>j===i?e.target.value:v))} style={{background:"#0d0d14",border:`1px solid ${COLORS[i]}55`,borderLeft:`3px solid ${COLORS[i]}`,borderRadius:6,padding:"8px 10px",color:COLORS[i],fontFamily:"'Courier New',monospace",fontSize:13,outline:"none"}} />
+                <input key={i} value={names[i]} onChange={e=>setNames(arr=>arr.map((v,j)=>j===i?e.target.value:v))} style={{background:"#050508",border:`1px solid ${COLORS[i]}55`,borderLeft:`3px solid ${COLORS[i]}`,borderRadius:6,padding:"8px 10px",color:COLORS[i],fontFamily:"'Courier New',monospace",fontSize:13,outline:"none"}} />
               ))}
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function App() {
   const [paused, setPaused] = useState(true);
   const [started, setStarted] = useState(false);
 
-  const globalStyle = `*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body, #root { width: 100%; overflow-x: hidden; background: #0d0d14; }`;
+  const globalStyle = `*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body, #root { width: 100%; overflow-x: hidden; background: #050508; }`;
   const [popup, setPopup] = useState(null); // null | 'dhappa' | 'kick'
   const [kickTarget, setKickTarget] = useState(null);
   const [winner, setWinner] = useState(null);
@@ -72,6 +72,9 @@ export default function App() {
   const intervalRef = useRef(null);
   const svgRef = useRef(null);
   const [svgSize, setSvgSize] = useState(500);
+  const arcRotationRef = useRef(0); // accumulated degrees, never resets — prevents short-way-round snapping
+  const [arcRotation, setArcRotation] = useState(0);
+  const [centerHovered, setCenterHovered] = useState(false);
 
   useEffect(() => {
     const update = () => {
@@ -116,6 +119,25 @@ export default function App() {
 
   const aliveIndices = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
   const curGlobalIdx = aliveIndices[activeIdx % Math.max(aliveIndices.length, 1)];
+
+  // Keep accumulated arc rotation so the indicator spins rather than jumping
+  useEffect(() => {
+    if (!started || !players.length) return;
+    const alive = players.filter(p => p.alive);
+    const n = alive.length;
+    if (n === 0) return;
+    const alivePos = alive.findIndex((_, i) => aliveIndices[i] === curGlobalIdx || alive[i] === players[curGlobalIdx]);
+    if (alivePos === -1) return;
+    const sectorDeg = 360 / n;
+    const targetDeg = (alivePos + 0.5) * sectorDeg + (-90); // rotOffset is -π/2 = -90deg
+    // Find shortest delta from current accumulated rotation
+    let current = arcRotationRef.current % 360;
+    let delta = ((targetDeg - current) % 360 + 360) % 360;
+    // Always go counterclockwise (negative direction) to match pass direction
+    if (delta > 180) delta -= 360;
+    arcRotationRef.current = arcRotationRef.current + delta;
+    setArcRotation(arcRotationRef.current);
+  }, [activeIdx, players, started]);
 
   // Check time out
   useEffect(() => {
@@ -197,13 +219,18 @@ export default function App() {
 
   const cx = svgSize / 2;
   const cy = svgSize / 2;
-  const centerR = svgSize * 0.18;
+  const centerR = svgSize * 0.24;
   const outerR = svgSize * 0.5;
-  const timeR = svgSize * 0.345;
+  const timeR = svgSize * 0.385;
 
   const n = aliveCount;
   // rotation so first player is at top, polygon rotated so flat edge faces up for even n
   const rotOffset = -Math.PI / 2;
+
+  // DHAPPA text: fill the circle — "DHAPPA" is 6 chars, diameter = 2*centerR
+  const dhappaFontSize = (centerR * 2 * 0.82) / 6;
+  // Timer text: sector width shrinks as n increases; scale accordingly
+  const timerFontSize = svgSize * (n <= 2 ? 0.11 : n <= 3 ? 0.09 : n <= 4 ? 0.075 : 0.062);
 
   // Compute sector midpoint angles (between polygon vertices, for player regions)
   // Players are arranged CCW, so sector i is between vertex i and vertex i-1 (CCW)
@@ -226,7 +253,7 @@ export default function App() {
 
   if (winner) {
     return (
-      <div style={{minHeight:"100vh",background:"#0d0d14",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+      <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
         <div style={{textAlign:"center"}}>
           <div style={{fontSize:80,marginBottom:16}}>💀</div>
           <div style={{color:"#555",fontSize:13,letterSpacing:4,marginBottom:8}}>LAST PLAYER STANDING</div>
@@ -239,7 +266,7 @@ export default function App() {
   }
 
   return (
-    <div style={{minHeight:"100vh",background:"#0d0d14",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto"}}>
+    <div style={{minHeight:"100vh",background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto"}}>
       {/* Top bar */}
       <div style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",boxSizing:"border-box"}}>
         <button onClick={()=>setConfig(null)} style={{background:"none",border:"1px solid #222",borderRadius:8,color:"#444",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2}}>← SETUP</button>
@@ -252,7 +279,7 @@ export default function App() {
       <div style={{position:"relative",width:svgSize,height:svgSize}}>
         <svg width={svgSize} height={svgSize} viewBox={`0 0 ${svgSize} ${svgSize}`} ref={svgRef} style={{display:"block"}}>
           {/* Background fills full SVG */}
-          <rect x={0} y={0} width={svgSize} height={svgSize} fill="#0d0d14" />
+          <rect x={0} y={0} width={svgSize} height={svgSize} fill="#050508" />
 
           {/* Player sectors */}
           {alivePlayers.map((player, i) => {
@@ -273,7 +300,7 @@ export default function App() {
             const path = `M ${xc1} ${yc1} L ${x1} ${y1} A ${edgeR} ${edgeR} 0 ${largeArc} 1 ${x2} ${y2} L ${xc2} ${yc2} A ${centerR} ${centerR} 0 ${largeArc} 0 ${xc1} ${yc1} Z`;
             const pct = times[globalIdx] / config.secs;
             const isLow = pct < 0.2;
-            const fillAlpha = isActive ? "33" : "11";
+            const fillAlpha = isActive ? "ee" : "99";
             const fillColor = isLow ? "#FF6B6B" : player.color;
             const isKickHighlight = highlightKick && globalIdx !== curGlobalIdx;
             return (
@@ -281,9 +308,9 @@ export default function App() {
                 if (popup === "kick") { handleSelectKick(globalIdx); return; }
                 if (globalIdx === curGlobalIdx && !popup) passToNext(globalIdx);
               }} style={{cursor: popup === "kick" ? "pointer" : globalIdx === curGlobalIdx ? "pointer" : "default"}}>
-                <path d={path} fill={`${fillColor}${isKickHighlight ? "33" : fillAlpha}`}
-                  stroke={isActive ? fillColor : "#1a1a2e"} strokeWidth={isActive ? 2 : 1}
-                  style={{transition:"all .3s", filter: isKickHighlight ? `drop-shadow(0 0 8px ${fillColor})` : "none"}}
+                <path d={path} fill={`${fillColor}${isKickHighlight ? "bb" : fillAlpha}`}
+                  stroke={isActive ? `${fillColor}88` : "#0f0f20"} strokeWidth={isActive ? 2 : 1}
+                  style={{transition:"all .3s"}}
                 />
                 {/* Time display rotated away from center */}
                 {(() => {
@@ -296,13 +323,13 @@ export default function App() {
                   // rotate so text base faces outward (top of text points away from center)
                   const deg = (midAngle * 180 / Math.PI) - 90;
                   const t = times[globalIdx];
-                  const dispColor = isLow ? "#FF6B6B" : isActive ? fillColor : "#555";
+                  const dispColor = isLow ? "#5a0000" : isActive ? player.dark : player.dark + "cc";
                   return (
                     <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
-                      <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.048} fontWeight={900} fill={dispColor} fontFamily="'Courier New',monospace" style={{letterSpacing:1}}>
+                      <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} stroke="#fff" strokeWidth={svgSize * 0.004} paintOrder="stroke" fontFamily="'Courier New',monospace" style={{letterSpacing:1}}>
                         {formatTime(t)}
                       </text>
-                      <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.022} fill={isActive ? fillColor : "#333"} fontFamily="'Courier New',monospace" dy={svgSize * 0.038}>
+                      <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.028} fill={isActive ? "#111" : "#222"} fontFamily="'Courier New',monospace" dy={svgSize * 0.048}>
                         {player.name}
                       </text>
                       {isKickHighlight && (
@@ -318,12 +345,40 @@ export default function App() {
           {/* Divider lines from center polygon to screen edge */}
           {polyVerts.map((pv, i) => {
             const edgeVert = getPolygonPoints(cx, cy, svgSize * 0.8, n, rotOffset)[i];
-            return <line key={i} x1={pv[0]} y1={pv[1]} x2={edgeVert[0]} y2={edgeVert[1]} stroke="#0d0d14" strokeWidth={3} />;
+            return <line key={i} x1={pv[0]} y1={pv[1]} x2={edgeVert[0]} y2={edgeVert[1]} stroke="#050508" strokeWidth={3} />;
           })}
-          <circle cx={cx} cy={cy} r={centerR} fill="#1a1a2e" stroke="none" onClick={handleDhappa} style={{cursor:"pointer"}} />
+          <circle cx={cx} cy={cy} r={centerR} fill={centerHovered ? "#1e1e35" : "#0f0f20"} stroke={centerHovered ? "#FF6B6B55" : "none"} strokeWidth={2} onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer", transition:"fill .15s, stroke .15s"}} />
+
+          {/* Active player indicator — arc rotates around center to point at active player */}
+          {(() => {
+            if (!started) return null;
+            const activePlayer = players[curGlobalIdx];
+            if (!activePlayer) return null;
+            const arcR = centerR - svgSize * 0.012;
+            const halfSpanDeg = (360 / n) / 2 - 5;
+            const halfSpanRad = halfSpanDeg * Math.PI / 180;
+            const x1a = cx + arcR * Math.cos(-halfSpanRad);
+            const y1a = cy + arcR * Math.sin(-halfSpanRad);
+            const x2a = cx + arcR * Math.cos(halfSpanRad);
+            const y2a = cy + arcR * Math.sin(halfSpanRad);
+            return (
+              <path
+                d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 0 1 ${x2a} ${y2a}`}
+                fill="none"
+                stroke={activePlayer.color}
+                strokeWidth={svgSize * 0.018}
+                strokeLinecap="round"
+                style={{
+                  transformOrigin: `${cx}px ${cy}px`,
+                  transform: `rotate(${arcRotation}deg)`,
+                  transition: "transform .35s cubic-bezier(.4,0,.2,1)",
+                }}
+              />
+            );
+          })()}
 
           {/* DHAPPA label */}
-          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.052} fontWeight={900} fill="#FF6B6B" fontFamily="'Courier New',monospace" onClick={handleDhappa} style={{cursor:"pointer",letterSpacing:2}}>
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize} fontWeight={900} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
             DHAPPA
           </text>
 
@@ -332,31 +387,31 @@ export default function App() {
 
         {/* Popups — rendered as absolutely positioned overlays */}
         {popup === "dhappa" && (
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#0d0d14cc",borderRadius:"50%"}}>
-            <div style={{background:"#13131f",border:"1px solid #FF6B6B44",borderRadius:20,padding:28,textAlign:"center",width:220}}>
-              <div style={{color:"#FF6B6B",fontSize:22,fontWeight:900,letterSpacing:3,marginBottom:4}}>DHAPPA!</div>
-              <div style={{color:"#444",fontSize:11,letterSpacing:2,marginBottom:20}}>CHOOSE YOUR MOVE</div>
-              <button onClick={handleIWon} style={{width:"100%",padding:"12px 0",borderRadius:10,background:"#6BCB7722",border:"1px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",marginBottom:10,letterSpacing:1}}>I WON 🏆</button>
-              <button onClick={handleKickSomeone} style={{width:"100%",padding:"12px 0",borderRadius:10,background:"#FF6B6B22",border:"1px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",marginBottom:14,letterSpacing:1}}>KICK SOMEONE 💀</button>
-              <button onClick={handleCancelDhappa} style={{background:"none",border:"none",color:"#333",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc",borderRadius:"50%"}}>
+            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:280}}>
+              <div style={{color:"#FF6B6B",fontSize:28,fontWeight:900,letterSpacing:3,marginBottom:6}}>DHAPPA!</div>
+              <div style={{color:"#444",fontSize:12,letterSpacing:2,marginBottom:26}}>CHOOSE YOUR MOVE</div>
+              <button onClick={handleIWon} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#6BCB7722",border:"1px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:12,letterSpacing:1}}>I WON 🏆</button>
+              <button onClick={handleKickSomeone} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B22",border:"1px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:18,letterSpacing:1}}>KICK SOMEONE 💀</button>
+              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
         )}
 
         {popup === "kick" && (
-          <div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",background:"#13131f",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",textAlign:"center",zIndex:10}}>
+          <div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",textAlign:"center",zIndex:10}}>
             <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:3,marginBottom:6}}>TAP A PLAYER TO KICK</div>
-            <button onClick={handleCancelDhappa} style={{background:"none",border:"none",color:"#333",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
+            <button onClick={handleCancelDhappa} style={{width:"100%",padding:"8px 0",borderRadius:8,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:11,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
           </div>
         )}
 
         {popup === "confirmKick" && (
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#0d0d14cc"}}>
-            <div style={{background:"#13131f",border:"1px solid #FF6B6B44",borderRadius:20,padding:28,textAlign:"center",width:220}}>
-              <div style={{color:"#FF6B6B",fontSize:13,fontWeight:900,letterSpacing:2,marginBottom:6}}>KICK OUT</div>
-              <div style={{color:"#fff",fontSize:18,fontWeight:900,marginBottom:20}}>{kickTarget !== null ? players[kickTarget]?.name : ""}?</div>
-              <button onClick={handleConfirmKick} style={{width:"100%",padding:"12px 0",borderRadius:10,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",marginBottom:10}}>CONFIRM 💀</button>
-              <button onClick={handleCancelDhappa} style={{background:"none",border:"none",color:"#333",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc"}}>
+            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:280}}>
+              <div style={{color:"#FF6B6B",fontSize:15,fontWeight:900,letterSpacing:2,marginBottom:8}}>KICK OUT</div>
+              <div style={{color:"#fff",fontSize:22,fontWeight:900,marginBottom:24}}>{kickTarget !== null ? players[kickTarget]?.name : ""}?</div>
+              <button onClick={handleConfirmKick} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:12}}>CONFIRM 💀</button>
+              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
         )}
@@ -373,7 +428,7 @@ export default function App() {
         </button>
         <button onClick={() => { if(started) setPaused(p=>!p); }}
           disabled={!started || !!winner}
-          style={{flex:1,padding:"16px 0",borderRadius:14,background:paused?"#FFD93D22":"#13131f",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
+          style={{flex:1,padding:"16px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
           {paused?"▶ GO":"⏸ PAUSE"}
         </button>
       </div>
