@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 const COLORS = ["#FF6B6B","#FFD93D","#6BCB77","#4D96FF","#C77DFF","#FF9F1C"];
 const DARK =   ["#cc2222","#cc9900","#1e8c3a","#1155cc","#7722cc","#cc5500"];
 const VDARK =  ["#3a0000","#3a2800","#003a10","#00103a","#1a003a","#3a1500"];
-const INITIAL_TIME = 5 * 60;
 
 function formatTime(s) {
   const m = Math.floor(s / 60);
@@ -65,21 +64,22 @@ export default function App() {
   const [paused, setPaused] = useState(true);
   const [started, setStarted] = useState(false);
 
-  const globalStyle = `*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } html, body, #root { width: 100%; overflow-x: hidden; background: #050508; }`;
-  const [popup, setPopup] = useState(null); // null | 'dhappa' | 'kick'
+  const [popup, setPopup] = useState(null); 
   const [kickTarget, setKickTarget] = useState(null);
   const [winner, setWinner] = useState(null);
   const [highlightKick, setHighlightKick] = useState(false);
   const intervalRef = useRef(null);
   const svgRef = useRef(null);
-  const [svgSize, setSvgSize] = useState(500);
-  const arcRotationRef = useRef(0); // accumulated degrees, never resets — prevents short-way-round snapping
+  
+  // Track continuous screen metrics separately
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const arcRotationRef = useRef(0); 
   const [arcRotation, setArcRotation] = useState(0);
   const [centerHovered, setCenterHovered] = useState(false);
 
   useEffect(() => {
     const update = () => {
-      setSvgSize(Math.min(window.innerWidth, window.innerHeight));
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
     };
     update();
     window.addEventListener("resize", update);
@@ -121,7 +121,6 @@ export default function App() {
   const aliveIndices = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
   const curGlobalIdx = aliveIndices[activeIdx % Math.max(aliveIndices.length, 1)];
 
-  // Keep accumulated arc rotation so the indicator spins rather than jumping
   useEffect(() => {
     if (!started || !players.length) return;
     const alive = players.filter(p => p.alive);
@@ -130,23 +129,20 @@ export default function App() {
     const alivePos = alive.findIndex((_, i) => aliveIndices[i] === curGlobalIdx || alive[i] === players[curGlobalIdx]);
     if (alivePos === -1) return;
     const sectorDeg = 360 / n;
-    const targetDeg = (alivePos + 0.5) * sectorDeg + (-90); // rotOffset is -π/2 = -90deg
-    // Find shortest delta from current accumulated rotation
+    const targetDeg = (alivePos + 0.5) * sectorDeg + (-90); 
     let current = arcRotationRef.current % 360;
     let delta = ((targetDeg - current) % 360 + 360) % 360;
-    // Always go counterclockwise (negative direction) to match pass direction
     if (delta > 180) delta -= 360;
     arcRotationRef.current = arcRotationRef.current + delta;
     setArcRotation(arcRotationRef.current);
   }, [activeIdx, players, started]);
 
-  // Check time out
   useEffect(() => {
     if (!started || !players.length) return;
     if (times[curGlobalIdx] <= 0) {
       kickPlayer(curGlobalIdx, true);
     }
-  }, [times]);
+  }, [times, started, players, curGlobalIdx]);
 
   const passToNext = useCallback((fromGlobal) => {
     if (!started) { setStarted(true); setPaused(false); return; }
@@ -154,12 +150,11 @@ export default function App() {
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
     const curPos = alive.indexOf(fromGlobal ?? curGlobalIdx);
-    // counterclockwise = previous in array (since polygon goes CCW)
     const nextPos = (curPos - 1 + alive.length) % alive.length;
     setActiveIdx(nextPos);
   }, [started, paused, winner, popup, players, curGlobalIdx]);
 
-  const kickPlayer = useCallback((globalIdx, timeout = false) => {
+  const kickPlayer = useCallback((globalIdx) => {
     setPlayers(prev => {
       const next = prev.map((p, i) => i === globalIdx ? {...p, alive: false} : p);
       const stillAlive = next.filter(p => p.alive);
@@ -169,12 +164,8 @@ export default function App() {
       } else if (stillAlive.length === 0) {
         setWinner("Nobody");
       } else {
-        // move to next alive
         const aliveIdxs = next.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
-        setActiveIdx(prev2 => {
-          const cur = aliveIdxs.indexOf(globalIdx);
-          return Math.min(prev2, aliveIdxs.length - 1);
-        });
+        setActiveIdx(prev2 => Math.min(prev2, aliveIdxs.length - 1));
       }
       return next;
     });
@@ -190,7 +181,6 @@ export default function App() {
   };
 
   const handleIWon = () => {
-    // kick the current player out (they won their round and leave)
     kickPlayer(curGlobalIdx);
   };
 
@@ -200,7 +190,7 @@ export default function App() {
   };
 
   const handleSelectKick = (globalIdx) => {
-    if (globalIdx === curGlobalIdx) return; // can't kick yourself
+    if (globalIdx === curGlobalIdx) return; 
     setKickTarget(globalIdx);
     setPopup("confirmKick");
   };
@@ -218,38 +208,23 @@ export default function App() {
 
   if (!config) return <SetupScreen onStart={startGame} />;
 
-  const cx = svgSize / 2;
-  const cy = svgSize / 2;
-  const centerR = svgSize * 0.24;
-  const outerR = svgSize * 0.5;
-  const timeR = svgSize * 0.385;
+  // Dynamic layout calculations centered on real-time screen width and height
+  const cx = dimensions.width / 2;
+  const cy = dimensions.height / 2;
+  const baseScale = Math.min(dimensions.width, dimensions.height);
+  
+  const centerR = baseScale * 0.24;
+  // Make outer radius massive so it safely bursts past screen margins cleanly
+  const outerR = Math.max(dimensions.width, dimensions.height) * 1.2;
+  const timeR = baseScale * 0.385;
 
   const n = aliveCount;
-  // rotation so first player is at top, polygon rotated so flat edge faces up for even n
   const rotOffset = -Math.PI / 2;
 
-  // DHAPPA text: fill the circle — "DHAPPA" is 6 chars, diameter = 2*centerR
   const dhappaFontSize = (centerR * 2 * 0.95) / 6;
-  const timerFontSize = svgSize * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
+  const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
 
-  // Compute sector midpoint angles (between polygon vertices, for player regions)
-  // Players are arranged CCW, so sector i is between vertex i and vertex i-1 (CCW)
-  const sectorAngles = Array.from({length: n}, (_, i) => {
-    const a1 = (2 * Math.PI * i / n) + rotOffset;
-    const a2 = (2 * Math.PI * ((i - 1 + n) % n) / n) + rotOffset;
-    // midpoint angle (CCW from a1 to a2)
-    let mid = (a1 + a2) / 2;
-    // handle wrap
-    if (Math.abs(a2 - a1) > Math.PI) mid += Math.PI;
-    return mid;
-  });
-
-  // Divider lines from center polygon to outer edge
   const polyVerts = getPolygonPoints(cx, cy, centerR, n, rotOffset);
-  const outerVerts = getPolygonPoints(cx, cy, outerR, n, rotOffset);
-
-  // Center polygon points string
-  const polyPointsStr = polyVerts.map(p => p.join(",")).join(" ");
 
   if (winner) {
     return (
@@ -265,14 +240,11 @@ export default function App() {
     );
   }
 
-
   return (
     <div style={{background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Quantico&display=swap');`}</style>
 
-      {/* Clock fills the full viewport */}
       <div style={{position:"relative",width:"100vw",height:"100vh",overflow:"hidden"}}>
-        {/* Top bar — floated over the clock */}
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",boxSizing:"border-box"}}>
           <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
@@ -280,28 +252,26 @@ export default function App() {
           </div>
         </div>
 
-        {/* SVG fills the viewport square */}
-        <svg width="100%" height="100%" viewBox={`0 0 ${svgSize} ${svgSize}`} ref={svgRef} style={{display:"block",position:"absolute",inset:0}}>
-          {/* Background fills full SVG */}
-          <rect x={0} y={0} width={svgSize} height={svgSize} fill="#050508" />
+        {/* Dynamic dynamic ViewBox parameters map to actual scale */}
+        <svg width="100%" height="100%" viewBox={`0 0 ${dimensions.width} ${dimensions.height}`} ref={svgRef} style={{display:"block",position:"absolute",inset:0}}>
+          <rect x={0} y={0} width={dimensions.width} height={dimensions.height} fill="#050508" />
 
-          {/* Player sectors */}
           {alivePlayers.map((player, i) => {
             const globalIdx = players.indexOf(player);
             const isActive = globalIdx === curGlobalIdx;
             const angle1 = (2 * Math.PI * i / n) + rotOffset;
             const angle2 = (2 * Math.PI * ((i + 1) % n) / n) + rotOffset;
-            const edgeR = svgSize * 0.8; // large enough to bleed past corners
-            const x1 = cx + edgeR * Math.cos(angle1);
-            const y1 = cy + edgeR * Math.sin(angle1);
-            const x2 = cx + edgeR * Math.cos(angle2);
-            const y2 = cy + edgeR * Math.sin(angle2);
+            
+            const x1 = cx + outerR * Math.cos(angle1);
+            const y1 = cy + outerR * Math.sin(angle1);
+            const x2 = cx + outerR * Math.cos(angle2);
+            const y2 = cy + outerR * Math.sin(angle2);
             const xc1 = cx + centerR * Math.cos(angle1);
             const yc1 = cy + centerR * Math.sin(angle1);
             const xc2 = cx + centerR * Math.cos(angle2);
             const yc2 = cy + centerR * Math.sin(angle2);
             const largeArc = (1 / n) > 0.5 ? 1 : 0;
-            const path = `M ${xc1} ${yc1} L ${x1} ${y1} A ${edgeR} ${edgeR} 0 ${largeArc} 1 ${x2} ${y2} L ${xc2} ${yc2} A ${centerR} ${centerR} 0 ${largeArc} 0 ${xc1} ${yc1} Z`;
+            const path = `M ${xc1} ${yc1} L ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${xc2} ${yc2} A ${centerR} ${centerR} 0 ${largeArc} 0 ${xc1} ${yc1} Z`;
             const pct = times[globalIdx] / config.secs;
             const isLow = pct < 0.2;
             const fillAlpha = isActive ? "ff" : "cc";
@@ -316,15 +286,12 @@ export default function App() {
                   stroke={isActive ? `${fillColor}` : "#0f0f20"} strokeWidth={isActive ? 2 : 1}
                   style={{transition:"all .3s"}}
                 />
-                {/* Time display rotated away from center */}
                 {(() => {
-                  // true midpoint of the CW arc from angle1 to angle2
                   let a1 = angle1, a2 = angle2;
                   if (a2 < a1) a2 += 2 * Math.PI;
                   const midAngle = (a1 + a2) / 2;
                   const tx = cx + timeR * Math.cos(midAngle);
                   const ty = cy + timeR * Math.sin(midAngle);
-                  // rotate so text base faces outward (top of text points away from center)
                   const deg = (midAngle * 180 / Math.PI) - 90;
                   const t = times[globalIdx];
                   const dispColor = isLow ? "#3a0000" : player.vdark;
@@ -334,7 +301,7 @@ export default function App() {
                         {formatTime(t)}
                       </text>
                       {isKickHighlight && (
-                        <text textAnchor="middle" dominantBaseline="middle" fontSize={svgSize * 0.022} fill="#FF6B6B" fontFamily="'Courier New',monospace" dy={svgSize * 0.06}>TAP TO KICK</text>
+                        <text textAnchor="middle" dominantBaseline="middle" fontSize={baseScale * 0.022} fill="#FF6B6B" fontFamily="'Courier New',monospace" dy={baseScale * 0.06}>TAP TO KICK</text>
                       )}
                     </g>
                   );
@@ -343,19 +310,18 @@ export default function App() {
             );
           })}
 
-          {/* Divider lines from center polygon to screen edge */}
           {polyVerts.map((pv, i) => {
-            const edgeVert = getPolygonPoints(cx, cy, svgSize * 0.8, n, rotOffset)[i];
+            const edgeVert = getPolygonPoints(cx, cy, outerR, n, rotOffset)[i];
             return <line key={i} x1={pv[0]} y1={pv[1]} x2={edgeVert[0]} y2={edgeVert[1]} stroke="#050508" strokeWidth={3} />;
           })}
+          
           <circle cx={cx} cy={cy} r={centerR} fill={centerHovered ? "#1e1e35" : "#0f0f20"} stroke={centerHovered ? "#FF6B6B55" : "none"} strokeWidth={2} onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer", transition:"fill .15s, stroke .15s"}} />
 
-          {/* Active player indicator — arc rotates around center to point at active player */}
           {(() => {
             if (!started) return null;
             const activePlayer = players[curGlobalIdx];
             if (!activePlayer) return null;
-            const arcR = centerR - svgSize * 0.012;
+            const arcR = centerR - baseScale * 0.012;
             const halfSpanDeg = (360 / n) / 2 - 5;
             const halfSpanRad = halfSpanDeg * Math.PI / 180;
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
@@ -367,7 +333,7 @@ export default function App() {
                 d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 0 1 ${x2a} ${y2a}`}
                 fill="none"
                 stroke={activePlayer.color}
-                strokeWidth={svgSize * 0.018}
+                strokeWidth={baseScale * 0.018}
                 strokeLinecap="round"
                 style={{
                   transformOrigin: `${cx}px ${cy}px`,
@@ -378,7 +344,6 @@ export default function App() {
             );
           })()}
 
-          {/* Player names curved along the center circle border */}
           <defs>
             {alivePlayers.map((player, i) => {
               const a1 = (2 * Math.PI * i / n) + rotOffset;
@@ -386,11 +351,10 @@ export default function App() {
               let sa = a1, ea = a2;
               if (ea < sa) ea += 2 * Math.PI;
               const mid = (sa + ea) / 2;
-              // Arc goes from slightly before mid to slightly after, centered
               const halfArc = Math.PI * 0.18;
               const arcA1 = mid - halfArc;
               const arcA2 = mid + halfArc;
-              const nr = centerR + svgSize * 0.008;
+              const nr = centerR + baseScale * 0.008;
               const sx = cx + nr * Math.cos(arcA1);
               const sy = cy + nr * Math.sin(arcA1);
               const ex = cx + nr * Math.cos(arcA2);
@@ -407,7 +371,7 @@ export default function App() {
             const isActive = globalIdx === curGlobalIdx;
             const fillColor = player.color;
             return (
-              <text key={`name-${i}`} fontFamily="'Courier New',monospace" fontSize={svgSize * 0.022} fontWeight={900} fill={isActive ? "#fff" : fillColor}>
+              <text key={`name-${i}`} fontFamily="'Courier New',monospace" fontSize={baseScale * 0.022} fontWeight={900} fill={isActive ? "#fff" : fillColor}>
                 <textPath href={`#namepath-${i}`} startOffset="50%" textAnchor="middle">
                   {player.name}
                 </textPath>
@@ -415,17 +379,13 @@ export default function App() {
             );
           })}
 
-          {/* DHAPPA label */}
           <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize} fontWeight={900} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
             DHAPPA
           </text>
-
-
         </svg>
 
-        {/* Popups — rendered as absolutely positioned overlays */}
         {popup === "dhappa" && (
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc",borderRadius:"50%"}}>
+          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc"}}>
             <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:280}}>
               <div style={{color:"#FF6B6B",fontSize:28,fontWeight:900,letterSpacing:3,marginBottom:6}}>DHAPPA!</div>
               <div style={{color:"#444",fontSize:12,letterSpacing:2,marginBottom:26}}>CHOOSE YOUR MOVE</div>
@@ -437,7 +397,7 @@ export default function App() {
         )}
 
         {popup === "kick" && (
-          <div style={{position:"absolute",bottom:0,left:"50%",transform:"translateX(-50%)",background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",textAlign:"center",zIndex:10}}>
+          <div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",maxWidth:340,textAlign:"center",zIndex:10}}>
             <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:3,marginBottom:6}}>TAP A PLAYER TO KICK</div>
             <button onClick={handleCancelDhappa} style={{width:"100%",padding:"8px 0",borderRadius:8,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:11,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
           </div>
@@ -453,14 +413,12 @@ export default function App() {
             </div>
           </div>
         )}
-        {/* Scroll hint */}
         {!popup && (
           <div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",color:"#333",fontSize:10,letterSpacing:3,pointerEvents:"none",zIndex:10}}>SCROLL FOR CONTROLS ↓</div>
         )}
 
-      </div>{/* end fullscreen clock */}
+      </div>
 
-      {/* Bottom controls — below the fold, revealed by scrolling */}
       <div style={{width:"100%",display:"flex",gap:12,padding:"16px 20px 32px",boxSizing:"border-box",background:"#050508"}}>
         <button onClick={() => {
           if (!started) { setStarted(true); setPaused(false); return; }
