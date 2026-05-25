@@ -515,38 +515,40 @@ export default function App() {
   const liveRankedPlayers = [...players]
     .map(p => ({ ...p, pts: seriesScores[p.originalIdx] ?? 0 }))
     .sort((a, b) => b.pts - a.pts);
-
   // Calculate the portrait SVG size to ensure full backdrop coverage
   const portraitSvgHeight = Math.max(dimensions.height - 94, dimensions.width + 140);
+
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        
         @media (orientation: portrait) {
-          .app-container { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; }
-          .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${portraitSvgHeight}px !important; }
-          .action-dashboard { position: relative !important; height: 100px !important; margin-top: 0 !important; }
+          .app-container {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .clock-view-wrapper {
+            position: relative !important;
+            width: 100% !important;
+            height: ${portraitSvgHeight}px !important;
+          }
+          .action-dashboard {
+            position: relative !important;
+            height: 100px !important;
+            margin-top: 0 !important;
+          }
         }
       `}</style>
 
+      {/* Main Clock Area */}
       <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden",background:"#050508"}}>
-        {/* Top bar with ranked scores */}
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
-          <button onClick={()=>setScreen("setup")} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
-          <div style={{display:"flex",gap:12,alignItems:"center"}}>
-            {/* Mini series scores - Ranked */}
-            <div style={{display:"flex",gap:6,alignItems:"center", background: "#11111a", padding: "4px 8px", borderRadius: 8}}>
-              {liveRankedPlayers.map((p, i) => (
-                <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                  <div style={{width:6,height:6,borderRadius:"50%",background:p.color, border: i === 0 && p.pts > 0 ? "1px solid #FFD93D" : "none"}} />
-                  <span style={{color:p.color,fontSize:9,fontWeight:900}}>{p.pts}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
-              {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
-            </div>
+          <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
+          <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
+            {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
           </div>
         </div>
 
@@ -558,6 +560,7 @@ export default function App() {
             const isActive = globalIdx === curGlobalIdx;
             const angle1 = (2 * Math.PI * i / n) + rotOffset;
             const angle2 = (2 * Math.PI * ((i + 1) % n) / n) + rotOffset;
+            
             const x1 = cx + outerR * Math.cos(angle1);
             const y1 = cy + outerR * Math.sin(angle1);
             const x2 = cx + outerR * Math.cos(angle2);
@@ -591,12 +594,8 @@ export default function App() {
                   const deg = (midAngle * 180 / Math.PI) - 90;
                   const t = times[globalIdx];
                   const dispColor = isLow ? "#3a0000" : player.vdark;
-                  const scoreY = -timerFontSize * 0.75;
                   return (
                     <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
-                      <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize * 0.38} fontWeight={900} fill={isLow ? "#FF6B6B88" : `${player.color}88`} fontFamily="'Quantico', cursive" dy={scoreY}>
-                        {seriesScores[globalIdx] ?? 0} pts
-                      </text>
                       <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="'Quantico', cursive" style={{letterSpacing:1}}>
                         {formatTime(t)}
                       </text>
