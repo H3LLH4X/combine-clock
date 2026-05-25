@@ -40,13 +40,6 @@ function SetupScreen({ onStart, seriesScores, playerNames: existingNames }) {
 
   const hasSeries = seriesScores && seriesScores.some(s => s > 0);
 
-  // Rank players by score descending
-  const rankedPlayers = existingNames 
-    ? existingNames
-        .map((name, i) => ({ name, pts: seriesScores[i] ?? 0, idx: i, color: COLORS[i] }))
-        .sort((a, b) => b.pts - a.pts)
-    : [];
-
   return (
     <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
       <div style={{width:"100%",maxWidth:440}}>
@@ -55,27 +48,21 @@ function SetupScreen({ onStart, seriesScores, playerNames: existingNames }) {
           <div style={{color:"#555",fontSize:12,letterSpacing:6,marginTop:4}}>MULTIPLAYER CLOCK</div>
         </div>
 
-        {/* Series scoreboard - Ranked */}
+        {/* Series scoreboard */}
         {hasSeries && (
           <div style={{background:"#0a0a14",border:"1px solid #222",borderRadius:12,padding:"14px 18px",marginBottom:16}}>
-            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom:14}}>
-              <div style={{color:"#555",fontSize:11,letterSpacing:3}}>LEADERBOARD</div>
-              <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:2}}>/{SERIES_WIN} TO WIN</div>
-            </div>
-            
-            {rankedPlayers.map((player, rank) => {
-              const pct = Math.min(player.pts / SERIES_WIN, 1);
+            <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>SERIES SCORES  <span style={{color:"#FF6B6B"}}>/{SERIES_WIN} to win</span></div>
+            {existingNames.map((name, i) => {
+              const pts = seriesScores[i] ?? 0;
+              const pct = Math.min(pts / SERIES_WIN, 1);
               return (
-                <div key={player.idx} style={{marginBottom:10}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{color:player.color,fontSize:13,fontWeight:700}}>
-                      <span style={{opacity: 0.6, marginRight: 6}}>#{rank + 1}</span>
-                      {player.name}
-                    </span>
-                    <span style={{color:player.color,fontSize:13,fontWeight:900}}>{player.pts} pts</span>
+                <div key={i} style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{color:COLORS[i],fontSize:12,fontWeight:700}}>{name}</span>
+                    <span style={{color:COLORS[i],fontSize:12,fontWeight:900}}>{pts} pts</span>
                   </div>
                   <div style={{height:4,background:"#111",borderRadius:2}}>
-                    <div style={{height:4,width:`${pct*100}%`,background:player.color,borderRadius:2,transition:"width .4s"}} />
+                    <div style={{height:4,width:`${pct*100}%`,background:COLORS[i],borderRadius:2,transition:"width .4s"}} />
                   </div>
                 </div>
               );
@@ -135,13 +122,6 @@ function SetupScreen({ onStart, seriesScores, playerNames: existingNames }) {
 
 // Round summary shown after each round before returning to setup
 function RoundSummary({ roundResult, seriesScores, players, onContinue, seriesWinner }) {
-  // Sort players dynamically by their new total series scores to reflect updated ranking
-  const rankedTotals = players.map((p, i) => ({
-    ...p,
-    pts: seriesScores[i] ?? 0,
-    idx: i
-  })).sort((a, b) => b.pts - a.pts);
-
   return (
     <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box"}}>
       <div style={{width:"100%",maxWidth:400}}>
@@ -164,7 +144,7 @@ function RoundSummary({ roundResult, seriesScores, players, onContinue, seriesWi
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:10,height:10,borderRadius:"50%",background:r.color,flexShrink:0}} />
                 <span style={{color:r.color,fontWeight:700,fontSize:13}}>{r.name}</span>
-                {r.dhappa && <span style={{color:"#FF6B6B",fontSize:10,letterSpacing:1,background:"#FF6B6B22",padding:"2px 6px",borderRadius:4}}>DHAPPA +{DHAPPA_POINTS}</span>}
+                {r.dhappa && <span style={{color:"#FF6B6B",fontSize:10,letterSpacing:1,background:"#FF6B6B22",padding:"2px 6px",borderRadius:4}}>DHAPPA +3</span>}
               </div>
               <div style={{display:"flex",gap:12,alignItems:"center"}}>
                 <span style={{color:"#555",fontSize:11}}>{r.position === 0 ? "1ST" : r.position === 1 ? "2ND" : r.position === 2 ? "3RD" : `${r.position+1}TH`}</span>
@@ -175,20 +155,15 @@ function RoundSummary({ roundResult, seriesScores, players, onContinue, seriesWi
         </div>
 
         <div style={{background:"#0a0a14",border:"1px solid #222",borderRadius:16,padding:24,marginBottom:20}}>
-          <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom:14}}>
-            <div style={{color:"#555",fontSize:11,letterSpacing:3}}>LEADERBOARD</div>
-            <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:2}}>/{SERIES_WIN}</div>
-          </div>
-          {rankedTotals.map((p, rank) => {
-            const pct = Math.min(p.pts / SERIES_WIN, 1);
+          <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:14}}>SERIES TOTALS  <span style={{color:"#FF6B6B"}}>/{SERIES_WIN}</span></div>
+          {players.map((p, i) => {
+            const pts = seriesScores[i] ?? 0;
+            const pct = Math.min(pts / SERIES_WIN, 1);
             return (
-              <div key={p.idx} style={{marginBottom:10}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{color:p.color,fontSize:13,fontWeight:700}}>
-                    <span style={{opacity: 0.6, marginRight: 6}}>#{rank + 1}</span>
-                    {p.name}
-                  </span>
-                  <span style={{color:p.color,fontWeight:900}}>{p.pts} pts</span>
+              <div key={i} style={{marginBottom:10}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{color:p.color,fontSize:12,fontWeight:700}}>{p.name}</span>
+                  <span style={{color:p.color,fontWeight:900}}>{pts} pts</span>
                 </div>
                 <div style={{height:5,background:"#111",borderRadius:3}}>
                   <div style={{height:5,width:`${pct*100}%`,background:p.color,borderRadius:3,transition:"width .5s"}} />
@@ -207,7 +182,7 @@ function RoundSummary({ roundResult, seriesScores, players, onContinue, seriesWi
 }
 
 export default function App() {
-  const [screen, setScreen] = useState("setup"); 
+  const [screen, setScreen] = useState("setup"); // "setup" | "game" | "roundSummary"
   const [config, setConfig] = useState(null);
   const [players, setPlayers] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -223,14 +198,14 @@ export default function App() {
   const svgRef = useRef(null);
 
   // Series state
-  const [seriesScores, setSeriesScores] = useState([]); 
-  const [seriesPlayerNames, setSeriesPlayerNames] = useState([]); 
-  const [roundResult, setRoundResult] = useState(null);  
-  const [finishOrder, setFinishOrder] = useState([]); 
-  const finishOrderRef = useRef([]); 
-  const [dhappaPlayer, setDhappaPlayer] = useState(null); 
+  const [seriesScores, setSeriesScores] = useState([]); // indexed same as original playerNames
+  const [seriesPlayerNames, setSeriesPlayerNames] = useState([]); // canonical names across rounds
+  const [roundResult, setRoundResult] = useState(null);  // shown in RoundSummary
+  const [finishOrder, setFinishOrder] = useState([]); // globalIdx in order of elimination (last = winner)
+  const finishOrderRef = useRef([]); // always-current mirror for use inside callbacks
+  const [dhappaPlayer, setDhappaPlayer] = useState(null); // globalIdx who called dhappa
   const dhappaPlayerRef = useRef(null);
-  const dhappaWinnerRef = useRef(null); 
+  const dhappaWinnerRef = useRef(null); // set when "I Won" mid-round; appended last in finishOrder
   const [seriesWinner, setSeriesWinner] = useState(null);
 
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -331,15 +306,18 @@ export default function App() {
     setActiveIdx(nextPos);
   }, [started, paused, winner, popup, players, curGlobalIdx]);
 
+  // Called when a round fully ends — compute points and show summary
   const endRound = useCallback((finalOrder, dhappaIdx, allPlayers, totalPlayers) => {
     clearInterval(intervalRef.current);
 
+    // finalOrder: array of globalIdx in elimination order (index 0 = first out = last place)
+    // last entry = round winner
     const n = totalPlayers;
     const newScores = [...seriesScores];
     const result = [];
 
     finalOrder.forEach((globalIdx, eliminationPos) => {
-      const finishPos = n - 1 - eliminationPos; 
+      const finishPos = n - 1 - eliminationPos; // 0 = winner, n-1 = last
       const basePoints = getPointsForPosition(finishPos, n);
       const isDhappa = globalIdx === dhappaIdx;
       const dhappaBonus = isDhappa ? DHAPPA_POINTS : 0;
@@ -355,10 +333,12 @@ export default function App() {
       });
     });
 
+    // Sort result by finish position (winner first)
     result.sort((a, b) => a.position - b.position);
 
     setSeriesScores(newScores);
 
+    // Check series winner
     const sw = newScores.findIndex(s => s >= SERIES_WIN);
     const swName = sw !== -1 ? allPlayers[sw].name : null;
     setSeriesWinner(swName);
@@ -375,11 +355,13 @@ export default function App() {
       setFinishOrder(newOrder);
 
       if (stillAlive.length <= 1) {
+        // Round over — if there's one survivor, add them; then append dhappaWinner last (1st place)
         let fullOrder = [...newOrder];
         if (stillAlive.length === 1) {
           const roundWinnerIdx = next.indexOf(stillAlive[0]);
           fullOrder = [...fullOrder, roundWinnerIdx];
         }
+        // Append the dhappa "I Won" player at the very end = 1st place
         if (dhappaWinnerRef.current !== null) {
           fullOrder = [...fullOrder, dhappaWinnerRef.current];
         }
@@ -404,6 +386,10 @@ export default function App() {
   };
 
   const handleIWon = () => {
+    // DHAPPA caller finished 1st — they leave the clock now.
+    // Remaining players keep playing; they'll fill 2nd, 3rd… spots among themselves.
+    // We record the caller as the round winner by NOT putting them in finishOrder yet —
+    // endRound will append them last (= 1st place) via dhappaWinnerIdx.
     const dhappaCallerIdx = curGlobalIdx;
     setDhappaPlayer(dhappaCallerIdx);
     dhappaPlayerRef.current = dhappaCallerIdx;
@@ -413,6 +399,8 @@ export default function App() {
       const stillAlive = next.filter(p => p.alive);
 
       if (stillAlive.length <= 1) {
+        // Only 1 (or 0) left — round ends immediately
+        // finishOrder so far = losers; add remaining player then dhappa caller at end (1st)
         const remainingIdx = stillAlive.length === 1 ? next.indexOf(stillAlive[0]) : null;
         const fullOrder = remainingIdx !== null
           ? [...finishOrderRef.current, remainingIdx, dhappaCallerIdx]
@@ -421,6 +409,8 @@ export default function App() {
         setFinishOrder(fullOrder);
         setTimeout(() => endRound(fullOrder, dhappaCallerIdx, next, config?.n ?? prev.length), 0);
       } else {
+        // Others keep playing — dhappa caller will be appended last by endRound
+        // Set a flag so endRound knows to append the dhappa winner at the end
         dhappaWinnerRef.current = dhappaCallerIdx;
         const aliveIdxs = next.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
         setActiveIdx(prev2 => Math.min(prev2, aliveIdxs.length - 1));
@@ -479,6 +469,7 @@ export default function App() {
         seriesWinner={seriesWinner}
         onContinue={() => {
           if (seriesWinner) {
+            // Reset series
             setSeriesScores([]);
             setSeriesPlayerNames([]);
             setConfig(null);
@@ -507,11 +498,6 @@ export default function App() {
   const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
   const polyVerts = getPolygonPoints(cx, cy, centerR, n, rotOffset);
 
-  // Dynamic ranking for the mini leaderboard during the round
-  const liveRankedPlayers = [...players]
-    .map(p => ({ ...p, pts: seriesScores[p.originalIdx] ?? 0 }))
-    .sort((a, b) => b.pts - a.pts);
-
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
       <style>{`
@@ -524,16 +510,16 @@ export default function App() {
       `}</style>
 
       <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden",background:"#050508"}}>
-        {/* Top bar with ranked scores */}
+        {/* Top bar */}
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
           <button onClick={()=>setScreen("setup")} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
-            {/* Mini series scores - Ranked */}
-            <div style={{display:"flex",gap:6,alignItems:"center", background: "#11111a", padding: "4px 8px", borderRadius: 8}}>
-              {liveRankedPlayers.map((p, i) => (
+            {/* Mini series scores */}
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              {players.map((p, i) => (
                 <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                  <div style={{width:6,height:6,borderRadius:"50%",background:p.color, border: i === 0 && p.pts > 0 ? "1px solid #FFD93D" : "none"}} />
-                  <span style={{color:p.color,fontSize:9,fontWeight:900}}>{p.pts}</span>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:p.color}} />
+                  <span style={{color:p.color,fontSize:9,fontWeight:900}}>{seriesScores[i]??0}</span>
                 </div>
               ))}
             </div>
@@ -584,6 +570,7 @@ export default function App() {
                   const deg = (midAngle * 180 / Math.PI) - 90;
                   const t = times[globalIdx];
                   const dispColor = isLow ? "#3a0000" : player.vdark;
+                  // Show series score above timer
                   const scoreY = -timerFontSize * 0.75;
                   return (
                     <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
@@ -656,12 +643,8 @@ export default function App() {
             </text>
           ))}
 
-          {/* Dynamic Points text underneath DHAPPA */}
-          <text x={cx} y={cy - dhappaFontSize * 0.15} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize} fontWeight={900} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize} fontWeight={900} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
             DHAPPA
-          </text>
-          <text x={cx} y={cy + dhappaFontSize * 0.85} textAnchor="middle" dominantBaseline="middle" fontSize={dhappaFontSize * 0.3} fontWeight={700} fill={centerHovered ? "#ff9999" : "#FF6B6B"} fontFamily="'Courier New',monospace" onClick={handleDhappa} onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)} style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s", opacity: 0.8}}>
-            BONUS +{DHAPPA_POINTS} PTS
           </text>
         </svg>
 
@@ -670,16 +653,9 @@ export default function App() {
             <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:300}}>
               <div style={{color:"#FF6B6B",fontSize:28,fontWeight:900,letterSpacing:3,marginBottom:4}}>DHAPPA!</div>
               <div style={{color:"#444",fontSize:11,letterSpacing:2,marginBottom:6}}>CHOOSE YOUR MOVE</div>
-              <div style={{color:"#FF6B6B",fontSize:11,marginBottom:22,letterSpacing:1}}>+{DHAPPA_POINTS} pts bonus for calling DHAPPA</div>
-              
-              <button onClick={handleIWon} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#6BCB7722",border:"1px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",marginBottom:12,letterSpacing:1}}>
-                I WON 🏆  (+{getPointsForPosition(0, config.n) + DHAPPA_POINTS} pts)
-              </button>
-              
-              <button onClick={handleKickSomeone} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B22",border:"1px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",marginBottom:18,letterSpacing:1}}>
-                KICK SOMEONE 💀  (+{DHAPPA_POINTS} pts)
-              </button>
-              
+              <div style={{color:"#FF6B6B",fontSize:11,marginBottom:22,letterSpacing:1}}>+3 pts bonus for calling DHAPPA</div>
+              <button onClick={handleIWon} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#6BCB7722",border:"1px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:12,letterSpacing:1}}>I WON 🏆  (+3 pts)</button>
+              <button onClick={handleKickSomeone} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B22",border:"1px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:18,letterSpacing:1}}>KICK SOMEONE 💀  (+3 pts)</button>
               <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
@@ -687,7 +663,7 @@ export default function App() {
 
         {popup === "kick" && (
           <div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",maxWidth:340,textAlign:"center",zIndex:100}}>
-            <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:3,marginBottom:6}}>TAP A PLAYER TO KICK (+{DHAPPA_POINTS} PTS)</div>
+            <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:3,marginBottom:6}}>TAP A PLAYER TO KICK</div>
             <button onClick={handleCancelDhappa} style={{width:"100%",padding:"8px 0",borderRadius:8,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:11,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
           </div>
         )}
