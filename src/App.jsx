@@ -523,11 +523,6 @@ export default function App() {
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-<<<<<<< HEAD
-=======
-        
-        /* Force container height properties to expand dynamically when portrait view overflows */
->>>>>>> parent of ce26a51 (updates 6)
         @media (orientation: portrait) {
           .app-container { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; }
           .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${portraitSvgHeight}px !important; }
