@@ -163,7 +163,7 @@ function RoundProgress({ events, players }) {
 // ── ROUND START POPUP ──
 function RoundStartPopup({ roundNum, starterName, starterColor, onClose }) {
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center"}}>
+    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>
       <div style={{background:"#0a0a14",border:`1px solid ${starterColor}44`,borderRadius:28,padding:44,textAlign:"center",maxWidth:320,width:"90%"}}>
         <div style={{color:"#555",fontSize:10,letterSpacing:5,marginBottom:16}}>GET READY</div>
         <div style={{fontSize:52,fontWeight:900,letterSpacing:2,color:"#fff",marginBottom:4}}>R{roundNum}</div>
@@ -184,7 +184,7 @@ function RoundStartPopup({ roundNum, starterName, starterColor, onClose }) {
 // ── ROUND LOSER POPUP ──
 function RoundLoserPopup({ loser, onClose }) {
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99998,background:"#050508dd",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+    <div style={{position:"fixed",inset:0,zIndex:99998,background:"#050508dd",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",fontWeight:900}}>
       <div style={{background:"#0a0a14",border:"1px solid #FF6B6B33",borderRadius:28,padding:40,textAlign:"center",maxWidth:300,width:"90%"}}>
         <div style={{fontSize:40,marginBottom:12}}>💀</div>
         <div style={{color:"#555",fontSize:10,letterSpacing:5,marginBottom:10}}>ROUND LOSER</div>
@@ -202,7 +202,7 @@ function RoundLoserPopup({ loser, onClose }) {
 function GameOverPopup({ winner, cumulativeScores, players, onPlayAgain }) {
   const sorted = [...players].map((p, i) => ({ ...p, score: cumulativeScores[i] ?? 0 })).sort((a, b) => b.score - a.score);
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace",fontWeight:900}}>
       <div style={{background:"#0a0a14",border:`1px solid ${winner.color}44`,borderRadius:28,padding:36,textAlign:"center",maxWidth:360,width:"90%"}}>
         <div style={{color:"#FFD93D",fontSize:11,letterSpacing:5,marginBottom:8}}>GAME OVER</div>
         <div style={{color:winner.color,fontSize:36,fontWeight:900,marginBottom:4}}>{winner.name}</div>
@@ -239,7 +239,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
   const hasHistory = existingPlayers?.length > 0 && roundNum > 1;
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",fontWeight:900,padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom:hasHistory ? 16 : 32}}>
           <div style={{fontSize:48,letterSpacing:4,color:"#fff",fontWeight:900}}>DHAPPA</div>
@@ -324,7 +324,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
 // ── ROUND SUMMARY SCREEN ──
 function RoundSummary({ roundResult, roundNum, cumulativeScores, players, targetScore, onContinue, gameWinner }) {
   return (
-    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",fontWeight:900,padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
       <div style={{width:"100%",maxWidth:400}}>
         <div style={{textAlign:"center",marginBottom:20}}>
           <div style={{color:"#555",fontSize:11,letterSpacing:4,marginBottom:4}}>ROUND {roundNum} OVER</div>
@@ -869,15 +869,18 @@ export default function App() {
   const outerR = Math.max(dimensions.width, clockHeight) * 2.0;
   const timeR = baseScale * 0.385;
   const n = aliveCount;
-  const dhappaFontSize = centerR * 0.54;
+  const dhappaFontSize = centerR * 0.58;
+  const dhappaTextLength = centerR * 1.72;
   const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
 
   return (
-    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
+    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",fontWeight:900,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
         .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${clockHeight}px !important; }
         .action-dashboard { position: relative !important; height: auto !important; max-height: none !important; }
+        .app-container, .app-container * { font-weight: 900 !important; }
+        .app-container text { font-weight: 900 !important; }
       `}</style>
 
       {showRoundStart && roundStartInfo && (
@@ -1028,7 +1031,7 @@ export default function App() {
             const largeArc = halfSpanRad * 2 > Math.PI ? 1 : 0;
             return (
               <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${largeArc} 1 ${x2a} ${y2a}`}
-                fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="butt"
+                fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="round" strokeLinejoin="round"
                 style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${turnIndicatorRotation}deg)`,transition:"transform .35s linear"}}
               />
             );
@@ -1037,6 +1040,8 @@ export default function App() {
           {/* DHAPPA label */}
           <text x={cx} y={cy - dhappaFontSize * 0.08} textAnchor="middle" dominantBaseline="middle"
             fontSize={dhappaFontSize} fontWeight={900}
+            textLength={dhappaTextLength}
+            lengthAdjust="spacingAndGlyphs"
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
             stroke={centerHovered ? "#ff9999" : "#FF6B6B"}
             strokeWidth={baseScale * 0.004}
@@ -1044,7 +1049,7 @@ export default function App() {
             fontFamily="'Courier New',monospace"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
-            style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s"}}>
+            style={{cursor:"pointer",letterSpacing:0,transition:"fill .15s"}}>
             DHAPPA
           </text>
           <text x={cx} y={cy + dhappaFontSize * 0.68} textAnchor="middle" dominantBaseline="middle"
