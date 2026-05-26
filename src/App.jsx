@@ -35,11 +35,43 @@ function formatTime(s) {
   return `${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;
 }
 
-function getPolygonPoints(cx, cy, r, n, rotOffset = 0) {
-  return Array.from({length: n}, (_, i) => {
-    const angle = (2 * Math.PI * i / n) + rotOffset;
-    return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+function getAliveSectors(alivePlayers, totalPlayers, rotOffset = 0) {
+  const twoPi = Math.PI * 2;
+  const sectors = new Map();
+  if (!alivePlayers.length || !totalPlayers) return sectors;
+
+  const origIdxs = alivePlayers.map(p => p.originalIdx).sort((a, b) => a - b);
+  const centers = origIdxs.map(origIdx => ({
+    origIdx,
+    angle: rotOffset + (twoPi * (origIdx + 0.5) / totalPlayers),
+  }));
+
+  if (centers.length === 1) {
+    const center = centers[0];
+    sectors.set(center.origIdx, {
+      angle1: center.angle - Math.PI + 0.001,
+      angle2: center.angle + Math.PI - 0.001,
+      midAngle: center.angle,
+    });
+    return sectors;
+  }
+
+  centers.forEach((center, i) => {
+    const prev = i === 0
+      ? { ...centers[centers.length - 1], angle: centers[centers.length - 1].angle - twoPi }
+      : centers[i - 1];
+    const next = i === centers.length - 1
+      ? { ...centers[0], angle: centers[0].angle + twoPi }
+      : centers[i + 1];
+
+    sectors.set(center.origIdx, {
+      angle1: (prev.angle + center.angle) / 2,
+      angle2: (center.angle + next.angle) / 2,
+      midAngle: center.angle,
+    });
   });
+
+  return sectors;
 }
 
 // ── SOUND: tick each second when ≤10s remain ──
@@ -105,6 +137,7 @@ function RoundProgress({ events, players }) {
       <div style={{color:"#555",fontSize:10,letterSpacing:4,marginBottom:12}}>THIS ROUND</div>
       {events.map((ev, i) => {
         const p = players[ev.globalIdx];
+        const target = ev.targetIdx !== null && ev.targetIdx !== undefined ? players[ev.targetIdx] : null;
         if (!p) return null;
         return (
           <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
@@ -113,6 +146,7 @@ function RoundProgress({ events, players }) {
               <div style={{display:"flex",alignItems:"center",gap:6}}>
                 <span style={{color:p.color,fontSize:12,fontWeight:700}}>{p.name}</span>
                 {ev.reason === "iwon"    && <span style={{color:"#6BCB77",fontSize:9,background:"#6BCB7722",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>I WON</span>}
+                {ev.reason === "kick"    && <span style={{color:"#FF6B6B",fontSize:9,background:"#FF6B6B22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>KICKED{target ? ` ${target.name}` : ""}</span>}
                 {ev.reason === "kicked"  && <span style={{color:"#FF6B6B",fontSize:9,background:"#FF6B6B22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>KICKED</span>}
                 {ev.reason === "timeout" && <span style={{color:"#FFD93D",fontSize:9,background:"#FFD93D22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>TIMEOUT</span>}
                 {ev.reason === "last"    && <span style={{color:"#555",fontSize:9,background:"#ffffff11",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>LOST</span>}
@@ -319,6 +353,7 @@ export default function App() {
   const [paused, setPaused] = useState(true);
   const [started, setStarted] = useState(false);
   const [popup, setPopup] = useState(null);
+  const [kickActor, setKickActor] = useState(null);
   const [kickTarget, setKickTarget] = useState(null);
   const [winner, setWinner] = useState(null);
   const [highlightKick, setHighlightKick] = useState(false);
@@ -329,6 +364,8 @@ export default function App() {
   const [roundResult, setRoundResult] = useState(null);
   const finishOrderRef = useRef([]);
   const dhappaPlayerRef = useRef(null);
+  const roundBonusesRef = useRef({});
+  const winnerPointsRef = useRef({});
   // Track how many "I WON" calls happened (to award points in sequence)
   const iWonCountRef = useRef(0);
 
@@ -350,8 +387,6 @@ export default function App() {
   const lastTickedSecRef = useRef(-1);
 
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
-  const arcRotationRef = useRef(0);
-  const [arcRotation, setArcRotation] = useState(0);
   const [centerHovered, setCenterHovered] = useState(false);
 
   useEffect(() => {
@@ -371,13 +406,15 @@ export default function App() {
     setPopup(null);
     finishOrderRef.current = [];
     dhappaPlayerRef.current = null;
+    roundBonusesRef.current = {};
+    winnerPointsRef.current = {};
     iWonCountRef.current = 0;
     setRoundResult(null);
     setRoundEvents([]);
     roundEventsRef.current = [];
     lastTickedSecRef.current = -1;
-    arcRotationRef.current = 0;
-    setArcRotation(0);
+    setKickActor(null);
+    setKickTarget(null);
     setRoundLoser(null);
     setShowRoundLoser(false);
 
@@ -445,22 +482,6 @@ export default function App() {
 
   useEffect(() => {
     if (!started || !players.length) return;
-    const alive = players.filter(p => p.alive);
-    const n = alive.length;
-    if (n === 0) return;
-    const alivePos = alive.findIndex((_, i) => aliveIndices[i] === curGlobalIdx || alive[i] === players[curGlobalIdx]);
-    if (alivePos === -1) return;
-    const sectorDeg = 360 / n;
-    const targetDeg = (alivePos + 0.5) * sectorDeg + (-90);
-    let current = arcRotationRef.current % 360;
-    let delta = ((targetDeg - current) % 360 + 360) % 360;
-    if (delta > 180) delta -= 360;
-    arcRotationRef.current = arcRotationRef.current + delta;
-    setArcRotation(arcRotationRef.current);
-  }, [activeIdx, players, started, aliveIndices, curGlobalIdx]);
-
-  useEffect(() => {
-    if (!started || !players.length) return;
     if (times[curGlobalIdx] <= 0) kickPlayer(curGlobalIdx, "timeout");
   }, [times, started, players, curGlobalIdx]);
 
@@ -475,13 +496,21 @@ export default function App() {
     setActiveIdx(nextPos);
   }, [started, paused, winner, popup, players, curGlobalIdx]);
 
-  const addRoundEvent = (globalIdx, reason, pts) => {
-    const ev = { globalIdx, reason, pts };
+  const addRoundEvent = (globalIdx, reason, pts, targetIdx = null) => {
+    const ev = { globalIdx, reason, pts, targetIdx };
     roundEventsRef.current = [...roundEventsRef.current, ev];
     setRoundEvents([...roundEventsRef.current]);
   };
 
+  const addRoundBonus = (globalIdx, pts) => {
+    roundBonusesRef.current = {
+      ...roundBonusesRef.current,
+      [globalIdx]: (roundBonusesRef.current[globalIdx] ?? 0) + pts,
+    };
+  };
+
   const endRound = useCallback((finalOrder, dhappaIdx, allPlayersSnap, totalPlayers, loserIdx) => {
+    void dhappaIdx;
     clearInterval(intervalRef.current);
 
     const n = totalPlayers;
@@ -494,14 +523,14 @@ export default function App() {
     finalOrder.forEach((globalIdx, eliminationPos) => {
       // eliminationPos 0 = first eliminated = lowest rank = loser
       // eliminationPos n-1 = last = highest rank = first winner
-      const finishPos = eliminationPos; // 0=last place, n-1=1st place
       // last place (loser) always 0
       let basePoints = 0;
       if (eliminationPos === 0) {
         basePoints = 0; // loser
+      } else if (winnerPointsRef.current[globalIdx] !== undefined) {
+        basePoints = winnerPointsRef.current[globalIdx];
       } else {
         // map to winner points table: finishPos n-1=1st winner gets table[0], n-2 gets table[1], etc.
-        const winnerRank = eliminationPos - 1; // 0-indexed winner rank (0=last winner before loser)
         // But we want first I WON = best = table[0]
         // finalOrder[n-1] = first I WON (highest), finalOrder[1] = last I WON before loser
         // So winnerRank from top: (n-1 - eliminationPos)
@@ -510,8 +539,8 @@ export default function App() {
         basePoints = table[winnerRankFromTop] ?? 0;
       }
 
-      const isDhappa = globalIdx === dhappaIdx;
-      const dhappaBonus = isDhappa ? DHAPPA_POINTS : 0;
+      const dhappaBonus = roundBonusesRef.current[globalIdx] ?? 0;
+      const isDhappa = dhappaBonus > 0;
       const earned = basePoints + dhappaBonus;
       result.push({
         globalIdx,
@@ -556,6 +585,7 @@ export default function App() {
     setPlayers(prev => {
       const next = prev.map((p, i) => i === globalIdx ? {...p, alive: false} : p);
       const stillAlive = next.filter(p => p.alive);
+      const previousOrder = [...finishOrderRef.current];
       const newOrder = [...finishOrderRef.current, globalIdx];
       finishOrderRef.current = newOrder;
 
@@ -564,12 +594,17 @@ export default function App() {
         let loserIdx = null;
 
         if (stillAlive.length === 1) {
-          // The last remaining player is the loser (gets 0)
           const lastIdx = next.indexOf(stillAlive[0]);
-          loserIdx = lastIdx;
-          addRoundEvent(lastIdx, "last", 0);
-          // loser goes at position 0 in fullOrder (first = loser)
-          fullOrder = [lastIdx, ...newOrder];
+          if (reason === "kicked" || reason === "timeout") {
+            // If a kick/timeout leaves one player standing, the player who just left is the loser.
+            loserIdx = globalIdx;
+            fullOrder = [globalIdx, ...previousOrder, lastIdx];
+          } else {
+            // If a player declares I WON, the remaining player is the loser.
+            loserIdx = lastIdx;
+            addRoundEvent(lastIdx, "last", 0);
+            fullOrder = [lastIdx, ...newOrder];
+          }
         } else {
           // kicked player was also the last one = loser
           loserIdx = newOrder[0];
@@ -590,6 +625,7 @@ export default function App() {
       return next;
     });
     setPopup(null);
+    setKickActor(null);
     setKickTarget(null);
     setHighlightKick(false);
     setPaused(false);
@@ -605,8 +641,12 @@ export default function App() {
 
   const handleIWon = () => {
     const dhappaCallerIdx = curGlobalIdx;
-    dhappaPlayerRef.current = dhappaCallerIdx;
+    if (dhappaPlayerRef.current === null) {
+      dhappaPlayerRef.current = dhappaCallerIdx;
+      addRoundBonus(dhappaCallerIdx, DHAPPA_POINTS);
+    }
     const pts = getNextWinnerPoints(iWonCountRef.current, config?.n ?? 2);
+    winnerPointsRef.current = { ...winnerPointsRef.current, [dhappaCallerIdx]: pts };
     iWonCountRef.current += 1;
     addRoundEvent(dhappaCallerIdx, "iwon", pts);
 
@@ -641,31 +681,36 @@ export default function App() {
     });
 
     setPopup(null);
+    setKickActor(null);
     setKickTarget(null);
     setHighlightKick(false);
     setPaused(false);
   };
 
   const handleKickSomeone = () => {
+    setKickActor(curGlobalIdx);
+    setKickTarget(null);
     setPopup("kick");
     setHighlightKick(true);
   };
 
   const handleSelectKick = (globalIdx) => {
-    if (globalIdx === curGlobalIdx) return;
+    if (globalIdx === kickActor) return;
     setKickTarget(globalIdx);
-    setPopup("confirmKick");
   };
 
   const handleConfirmKick = () => {
-    if (dhappaPlayerRef.current === null) dhappaPlayerRef.current = curGlobalIdx;
-    addRoundEvent(kickTarget, "kicked", DHAPPA_POINTS);
+    if (kickActor === null || kickTarget === null || kickActor === kickTarget) return;
+    if (dhappaPlayerRef.current === null) dhappaPlayerRef.current = kickActor;
+    addRoundBonus(kickActor, DHAPPA_POINTS);
+    addRoundEvent(kickActor, "kick", DHAPPA_POINTS, kickTarget);
     kickPlayer(kickTarget, "kicked");
   };
 
   const handleCancelDhappa = () => {
     setPopup(null);
     setHighlightKick(false);
+    setKickActor(null);
     setKickTarget(null);
     setPaused(false);
   };
@@ -732,7 +777,7 @@ export default function App() {
   const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
   // Use originalIdx to keep each player's sector anchored to its starting position
   const totalPlayers = config?.n ?? players.length;
-  const polyVerts = getPolygonPoints(cx, cy, centerR, n, rotOffset);
+  const sectorByOrig = getAliveSectors(alivePlayers, totalPlayers, rotOffset);
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
@@ -764,7 +809,7 @@ export default function App() {
       {/* Main Clock Area */}
       <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden",background:"#050508"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
-          <button onClick={()=>setConfig(null)} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
+          <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
             <div style={{color:"#333",fontSize:10,letterSpacing:2}}>R{roundNum - 1}</div>
             <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
@@ -784,9 +829,9 @@ export default function App() {
             const origIdx = player.originalIdx;
             const isActive = globalIdx === curGlobalIdx;
 
-            // Sector based on originalIdx / totalPlayers (FIXED — doesn't shift when players leave)
-            const angle1 = (2 * Math.PI * origIdx / totalPlayers) + rotOffset;
-            const angle2 = (2 * Math.PI * (origIdx + 1) / totalPlayers) + rotOffset;
+            const sector = sectorByOrig.get(origIdx);
+            if (!sector) return null;
+            const { angle1, angle2, midAngle } = sector;
 
             const x1 = cx + outerR * Math.cos(angle1);
             const y1 = cy + outerR * Math.sin(angle1);
@@ -796,18 +841,14 @@ export default function App() {
             const yc1 = cy + centerR * Math.sin(angle1);
             const xc2 = cx + centerR * Math.cos(angle2);
             const yc2 = cy + centerR * Math.sin(angle2);
-            const largeArc = (1 / totalPlayers) > 0.5 ? 1 : 0;
+            const largeArc = (angle2 - angle1) > Math.PI ? 1 : 0;
             const path = `M ${xc1} ${yc1} L ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${xc2} ${yc2} A ${centerR} ${centerR} 0 ${largeArc} 0 ${xc1} ${yc1} Z`;
             const pct = times[globalIdx] / config.secs;
             const isLow = pct < 0.2;
             const fillAlpha = isActive ? "ff" : "cc";
             const fillColor = isLow ? "#FF6B6B" : player.color;
-            const isKickHighlight = highlightKick && globalIdx !== curGlobalIdx;
+            const isKickHighlight = highlightKick && globalIdx !== kickActor;
 
-            // Mid-angle for timer text (fixed position)
-            let a1 = angle1, a2 = angle2;
-            if (a2 < a1) a2 += 2 * Math.PI;
-            const midAngle = (a1 + a2) / 2;
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
             const deg = (midAngle * 180 / Math.PI) - 90;
@@ -860,7 +901,9 @@ export default function App() {
           {/* Dividers between alive player sectors only */}
           {alivePlayers.map((player) => {
             const origIdx = player.originalIdx;
-            const angle = (2 * Math.PI * origIdx / totalPlayers) + rotOffset;
+            const sector = sectorByOrig.get(origIdx);
+            if (!sector) return null;
+            const angle = sector.angle1;
             const pv = [cx + centerR * Math.cos(angle), cy + centerR * Math.sin(angle)];
             const edgeVert = [cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle)];
             return <line key={`div-${origIdx}`} x1={pv[0]} y1={pv[1]} x2={edgeVert[0]} y2={edgeVert[1]} stroke="#050508" strokeWidth={3} />;
@@ -881,17 +924,19 @@ export default function App() {
             if (!started) return null;
             const activePlayer = players[curGlobalIdx];
             if (!activePlayer) return null;
+            const activeSector = sectorByOrig.get(activePlayer.originalIdx);
+            if (!activeSector) return null;
             const arcR = centerR - baseScale * 0.012;
-            const halfSpanDeg = (360 / totalPlayers) / 2 - 5;
-            const halfSpanRad = halfSpanDeg * Math.PI / 180;
+            const halfSpanRad = Math.max((activeSector.angle2 - activeSector.angle1) / 2 - 0.08, 0.12);
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
             const y2a = cy + arcR * Math.sin(halfSpanRad);
+            const activeRotation = activeSector.midAngle * 180 / Math.PI;
             return (
               <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 0 1 ${x2a} ${y2a}`}
                 fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="round"
-                style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${arcRotation}deg)`,transition:"transform .35s cubic-bezier(.4,0,.2,1)"}}
+                style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${activeRotation}deg)`,transition:"transform .35s cubic-bezier(.4,0,.2,1)"}}
               />
             );
           })()}
@@ -947,23 +992,56 @@ export default function App() {
         )}
 
         {popup === "kick" && (
-          <div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:12,padding:"10px 16px",width:"80%",maxWidth:340,textAlign:"center",zIndex:100}}>
-            <div style={{color:"#FF6B6B",fontSize:11,letterSpacing:3,marginBottom:6}}>TAP A PLAYER TO KICK (+{DHAPPA_POINTS} PTS TO YOU)</div>
-            <button onClick={handleCancelDhappa} style={{width:"100%",padding:"8px 0",borderRadius:8,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:11,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
-          </div>
-        )}
-
-        {popup === "confirmKick" && (
           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc",zIndex:100}}>
-            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:280}}>
-              <div style={{color:"#FF6B6B",fontSize:15,fontWeight:900,letterSpacing:2,marginBottom:8}}>KICK OUT</div>
-              <div style={{color:"#fff",fontSize:22,fontWeight:900,marginBottom:8}}>{kickTarget !== null ? players[kickTarget]?.name : ""}?</div>
-              <div style={{color:"#555",fontSize:11,marginBottom:20,letterSpacing:1}}>You get +{DHAPPA_POINTS} pts · they get 0</div>
-              <button onClick={handleConfirmKick} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",marginBottom:12}}>CONFIRM 💀</button>
+            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:28,textAlign:"center",width:"90%",maxWidth:420}}>
+              <div style={{color:"#FF6B6B",fontSize:18,fontWeight:900,letterSpacing:3,marginBottom:6}}>KICK SOMEONE OUT</div>
+              <div style={{color:"#555",fontSize:11,marginBottom:18,letterSpacing:1}}>Kicker gets +{DHAPPA_POINTS} pts and stays in the game</div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18,textAlign:"left"}}>
+                <div>
+                  <div style={{color:"#555",fontSize:10,letterSpacing:2,marginBottom:8}}>KICKER</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {alivePlayers.map((p) => {
+                      const idx = players.indexOf(p);
+                      const selected = idx === kickActor;
+                      return (
+                        <button key={`actor-${idx}`} onClick={() => { setKickActor(idx); if (kickTarget === idx) setKickTarget(null); }}
+                          style={{padding:"10px 8px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`2px solid ${p.color}`:"1px solid #222",color:selected?p.color:"#777",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer"}}>
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{color:"#555",fontSize:10,letterSpacing:2,marginBottom:8}}>KICKED OUT</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {alivePlayers.map((p) => {
+                      const idx = players.indexOf(p);
+                      const disabled = idx === kickActor;
+                      const selected = idx === kickTarget;
+                      return (
+                        <button key={`target-${idx}`} onClick={() => !disabled && handleSelectKick(idx)}
+                          disabled={disabled}
+                          style={{padding:"10px 8px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`2px solid ${p.color}`:"1px solid #222",color:disabled?"#333":selected?p.color:"#777",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.55:1}}>
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <button onClick={handleConfirmKick} disabled={kickActor === null || kickTarget === null || kickActor === kickTarget}
+                style={{width:"100%",padding:"14px 0",borderRadius:12,background:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#FF6B6B" : "#221111",border:"none",color:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#fff" : "#553333",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "pointer" : "not-allowed",marginBottom:12,letterSpacing:2}}>
+                CONFIRM KICK
+              </button>
               <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
         )}
+
       </div>
 
       {/* Action Dashboard */}
