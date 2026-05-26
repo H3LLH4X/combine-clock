@@ -765,8 +765,8 @@ export default function App() {
   // ── GAME SCREEN ──
   const isPortrait = dimensions.height > dimensions.width;
   const cx = dimensions.width / 2;
-  const portraitSvgHeight = Math.max(dimensions.height - 94, dimensions.width + 140);
-  const cy = isPortrait ? (dimensions.width / 2) + 60 : dimensions.height / 2;
+  const clockHeight = isPortrait ? Math.max(dimensions.height - 94, dimensions.width + 140) : Math.max(dimensions.height, 560);
+  const cy = isPortrait ? (dimensions.width / 2) + 60 : clockHeight / 2;
   const baseScale = Math.min(dimensions.width, dimensions.height);
   const centerR = baseScale * 0.24;
   const outerR = Math.max(dimensions.width, dimensions.height) * 2.0;
@@ -780,14 +780,11 @@ export default function App() {
   const sectorByOrig = getAliveSectors(alivePlayers, totalPlayers, rotOffset);
 
   return (
-    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none"}}>
+    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
-        @media (orientation: portrait) {
-          .app-container { overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch; }
-          .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${portraitSvgHeight}px !important; }
-          .action-dashboard { position: relative !important; height: auto !important; margin-top: 0 !important; }
-        }
+        .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${clockHeight}px !important; }
+        .action-dashboard { position: relative !important; height: auto !important; max-height: none !important; }
       `}</style>
 
       {showRoundStart && roundStartInfo && (
@@ -807,7 +804,7 @@ export default function App() {
       )}
 
       {/* Main Clock Area */}
-      <div className="clock-view-wrapper" style={{position:"absolute",top:0,left:0,width:"100%",height:"calc(100% - 94px)",overflow:"hidden",background:"#050508"}}>
+      <div className="clock-view-wrapper" style={{position:"relative",width:"100%",height:clockHeight,overflow:"hidden",background:"#050508"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
           <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
@@ -818,10 +815,10 @@ export default function App() {
           </div>
         </div>
 
-        <svg width="100%" height={isPortrait ? portraitSvgHeight : "100%"}
-          viewBox={`0 0 ${dimensions.width} ${isPortrait ? portraitSvgHeight : dimensions.height}`}
+        <svg width="100%" height={clockHeight}
+          viewBox={`0 0 ${dimensions.width} ${clockHeight}`}
           ref={svgRef} style={{display:"block"}}>
-          <rect x={0} y={0} width={dimensions.width} height={isPortrait ? portraitSvgHeight : dimensions.height} fill="#050508" />
+          <rect x={0} y={0} width={dimensions.width} height={clockHeight} fill="#050508" />
 
           {alivePlayers.map((player) => {
             // Use originalIdx to fix each player at their starting sector angle
@@ -1045,7 +1042,7 @@ export default function App() {
       </div>
 
       {/* Action Dashboard */}
-      <div className="action-dashboard" style={{position:"absolute",bottom:0,left:0,right:0,background:"#050508",borderTop:"1px solid #111",overflowY:"auto",maxHeight:"60vh"}}>
+      <div className="action-dashboard" style={{position:"relative",background:"#050508",borderTop:"1px solid #111",overflow:"visible",paddingBottom:24}}>
         {/* Buttons first */}
         <div style={{display:"flex",gap:12,padding:"12px 20px 10px",boxSizing:"border-box"}}>
           <button onClick={() => {
