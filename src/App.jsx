@@ -97,10 +97,10 @@ function Leaderboard({ players, cumulativeScores, roundNum, targetScore }) {
     .sort((a, b) => b.score - a.score);
 
   return (
-    <div style={{background:"#0a0a14",border:"1px solid #1a1a2e",borderRadius:16,padding:20,marginBottom:16}}>
+      <div style={{background:"#0a0a14",border:"1px solid #1a1a2e",borderRadius:16,padding:22,marginBottom:16}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div style={{color:"#555",fontSize:10,letterSpacing:4}}>LEADERBOARD{roundNum > 0 ? ` · ROUND ${roundNum}` : ""}</div>
-        <div style={{color:"#444",fontSize:10,letterSpacing:2}}>TARGET: <span style={{color:"#FFD93D",fontWeight:900}}>{targetScore}</span></div>
+        <div style={{color:"#666",fontSize:13,fontWeight:900,letterSpacing:3}}>LEADERBOARD{roundNum > 0 ? ` · ROUND ${roundNum}` : ""}</div>
+        <div style={{color:"#555",fontSize:13,fontWeight:900,letterSpacing:2}}>TARGET: <span style={{color:"#FFD93D",fontWeight:900}}>{targetScore}</span></div>
       </div>
       {sorted.map((p, i) => {
         const pct = Math.min(p.score / targetScore, 1);
@@ -109,14 +109,14 @@ function Leaderboard({ players, cumulativeScores, roundNum, targetScore }) {
           <div key={p.name} style={{marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
               <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{color:"#333",fontSize:10,width:14}}>{i+1}</span>
+                <span style={{color:"#444",fontSize:13,fontWeight:900,width:16}}>{i+1}</span>
                 <div style={{width:8,height:8,borderRadius:"50%",background:p.color,flexShrink:0}}/>
-                <span style={{color:p.color,fontSize:13,fontWeight:700}}>{p.name}</span>
-                {isLeading && <span style={{color:"#FFD93D",fontSize:9,letterSpacing:2,background:"#FFD93D15",padding:"1px 5px",borderRadius:3}}>LEAD</span>}
+                <span style={{color:p.color,fontSize:16,fontWeight:900}}>{p.name}</span>
+                {isLeading && <span style={{color:"#FFD93D",fontSize:11,fontWeight:900,letterSpacing:2,background:"#FFD93D15",padding:"3px 7px",borderRadius:4}}>LEAD</span>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
-                <span style={{color:p.color,fontWeight:900,fontSize:14}}>{p.score}</span>
-                <span style={{color:"#333",fontSize:10}}>/{targetScore}</span>
+                <span style={{color:p.color,fontWeight:900,fontSize:17}}>{p.score}</span>
+                <span style={{color:"#444",fontSize:13,fontWeight:900}}>/{targetScore}</span>
               </div>
             </div>
             <div style={{height:4,background:"#111",borderRadius:4,overflow:"hidden"}}>
@@ -133,8 +133,8 @@ function Leaderboard({ players, cumulativeScores, roundNum, targetScore }) {
 function RoundProgress({ events, players }) {
   if (!events.length) return null;
   return (
-    <div style={{background:"#0a0a14",border:"1px solid #1a1a2e",borderRadius:14,padding:16,marginBottom:16}}>
-      <div style={{color:"#555",fontSize:10,letterSpacing:4,marginBottom:12}}>THIS ROUND</div>
+    <div style={{background:"#0a0a14",border:"1px solid #1a1a2e",borderRadius:14,padding:18,marginBottom:16}}>
+      <div style={{color:"#666",fontSize:13,fontWeight:900,letterSpacing:3,marginBottom:14}}>THIS ROUND</div>
       {events.map((ev, i) => {
         const p = players[ev.globalIdx];
         const target = ev.targetIdx !== null && ev.targetIdx !== undefined ? players[ev.targetIdx] : null;
@@ -144,14 +144,14 @@ function RoundProgress({ events, players }) {
             <div style={{width:6,height:6,borderRadius:"50%",background:p.color,flexShrink:0}}/>
             <div style={{flex:1,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
-                <span style={{color:p.color,fontSize:12,fontWeight:700}}>{p.name}</span>
-                {ev.reason === "iwon"    && <span style={{color:"#6BCB77",fontSize:9,background:"#6BCB7722",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>I WON</span>}
-                {ev.reason === "kick"    && <span style={{color:"#FF6B6B",fontSize:9,background:"#FF6B6B22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>KICKED{target ? ` ${target.name}` : ""}</span>}
-                {ev.reason === "kicked"  && <span style={{color:"#FF6B6B",fontSize:9,background:"#FF6B6B22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>KICKED</span>}
-                {ev.reason === "timeout" && <span style={{color:"#FFD93D",fontSize:9,background:"#FFD93D22",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>TIMEOUT</span>}
-                {ev.reason === "last"    && <span style={{color:"#555",fontSize:9,background:"#ffffff11",padding:"1px 5px",borderRadius:3,letterSpacing:1}}>LOST</span>}
+                <span style={{color:p.color,fontSize:15,fontWeight:900}}>{p.name}</span>
+                {ev.reason === "iwon"    && <span style={{color:"#6BCB77",fontSize:11,fontWeight:900,background:"#6BCB7722",padding:"3px 7px",borderRadius:4,letterSpacing:1}}>I WON</span>}
+                {ev.reason === "kick"    && <span style={{color:"#FF6B6B",fontSize:11,fontWeight:900,background:"#FF6B6B22",padding:"3px 7px",borderRadius:4,letterSpacing:1}}>KICKED{target ? ` ${target.name}` : ""}</span>}
+                {ev.reason === "kicked"  && <span style={{color:"#FF6B6B",fontSize:11,fontWeight:900,background:"#FF6B6B22",padding:"3px 7px",borderRadius:4,letterSpacing:1}}>KICKED</span>}
+                {ev.reason === "timeout" && <span style={{color:"#FFD93D",fontSize:11,fontWeight:900,background:"#FFD93D22",padding:"3px 7px",borderRadius:4,letterSpacing:1}}>TIMEOUT</span>}
+                {ev.reason === "last"    && <span style={{color:"#666",fontSize:11,fontWeight:900,background:"#ffffff11",padding:"3px 7px",borderRadius:4,letterSpacing:1}}>LOST</span>}
               </div>
-              <span style={{color:ev.pts > 0 ? p.color : "#555",fontWeight:900,fontSize:13}}>{ev.pts > 0 ? `+${ev.pts}` : "0 pts"}</span>
+              <span style={{color:ev.pts > 0 ? p.color : "#666",fontWeight:900,fontSize:16}}>{ev.pts > 0 ? `+${ev.pts}` : "0 pts"}</span>
             </div>
           </div>
         );
@@ -869,7 +869,7 @@ export default function App() {
   const outerR = Math.max(dimensions.width, clockHeight) * 2.0;
   const timeR = baseScale * 0.385;
   const n = aliveCount;
-  const dhappaFontSize = (centerR * 2 * 0.95) / 6;
+  const dhappaFontSize = centerR * 0.54;
   const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
 
   return (
@@ -900,12 +900,12 @@ export default function App() {
       <div className="clock-view-wrapper" style={{position:"relative",width:"100%",height:clockHeight,overflow:"hidden",background:"#050508"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
           <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
-            <button onClick={resetGame} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#FF6B6B",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>RESET</button>
+            <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"2px solid #333",borderRadius:8,color:"#777",padding:"9px 16px",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",letterSpacing:1,backdropFilter:"blur(4px)"}}>← SETUP</button>
+            <button onClick={resetGame} style={{background:"#05050899",border:"2px solid #333",borderRadius:8,color:"#FF6B6B",padding:"9px 16px",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",letterSpacing:1,backdropFilter:"blur(4px)"}}>RESET</button>
           </div>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
-            <div style={{color:"#333",fontSize:10,letterSpacing:2}}>R{roundNum - 1}</div>
-            <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
+            <div style={{color:"#444",fontSize:13,fontWeight:900,letterSpacing:2}}>R{roundNum - 1}</div>
+            <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:14, fontWeight:900, letterSpacing:2}}>
               {!started ? "TAP TO START" : paused ? "PAUSED" : "● LIVE"}
             </div>
           </div>
@@ -1035,22 +1035,22 @@ export default function App() {
           })()}
 
           {/* DHAPPA label */}
-          <text x={cx} y={cy - dhappaFontSize * 0.15} textAnchor="middle" dominantBaseline="middle"
+          <text x={cx} y={cy - dhappaFontSize * 0.08} textAnchor="middle" dominantBaseline="middle"
             fontSize={dhappaFontSize} fontWeight={900}
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
             fontFamily="'Courier New',monospace"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
-            style={{cursor:"pointer",letterSpacing:2,transition:"fill .15s"}}>
+            style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s"}}>
             DHAPPA
           </text>
-          <text x={cx} y={cy + dhappaFontSize * 0.85} textAnchor="middle" dominantBaseline="middle"
-            fontSize={dhappaFontSize * 0.3} fontWeight={700}
+          <text x={cx} y={cy + dhappaFontSize * 0.68} textAnchor="middle" dominantBaseline="middle"
+            fontSize={dhappaFontSize * 0.22} fontWeight={900}
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
             fontFamily="'Courier New',monospace"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
-            style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s",opacity:0.8}}>
+            style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s",opacity:0.9}}>
             BONUS +{DHAPPA_POINTS} PTS
           </text>
         </svg>
@@ -1058,47 +1058,47 @@ export default function App() {
         {/* DHAPPA choice popup */}
         {popup === "dhappa" && (
           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc",zIndex:100}}>
-            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:36,textAlign:"center",width:320}}>
-              <div style={{color:"#FF6B6B",fontSize:28,fontWeight:900,letterSpacing:3,marginBottom:4}}>DHAPPA!</div>
-              <div style={{color:"#444",fontSize:11,letterSpacing:2,marginBottom:20}}>CHOOSE YOUR MOVE</div>
+            <div style={{background:"#0a0a14",border:"2px solid #FF6B6B44",borderRadius:24,padding:40,textAlign:"center",width:360,maxWidth:"90%"}}>
+              <div style={{color:"#FF6B6B",fontSize:34,fontWeight:900,letterSpacing:3,marginBottom:6}}>DHAPPA!</div>
+              <div style={{color:"#666",fontSize:14,fontWeight:900,letterSpacing:2,marginBottom:24}}>CHOOSE YOUR MOVE</div>
 
               {/* I WON — shows next winner points (no dhappa bonus) */}
-              <button onClick={handleIWon} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#6BCB7722",border:"1px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",marginBottom:6,letterSpacing:1}}>
+              <button onClick={handleIWon} style={{width:"100%",padding:"20px 0",borderRadius:12,background:"#6BCB7722",border:"2px solid #6BCB77",color:"#6BCB77",fontFamily:"'Courier New',monospace",fontSize:18,fontWeight:900,cursor:"pointer",marginBottom:8,letterSpacing:1}}>
                 I WON 🏆
               </button>
-              <div style={{color:"#6BCB7799",fontSize:11,marginBottom:18,letterSpacing:1}}>
+              <div style={{color:"#6BCB7799",fontSize:14,fontWeight:900,marginBottom:22,letterSpacing:1}}>
                 Awards you: <strong style={{color:"#6BCB77"}}>+{nextIWonPoints} pts</strong>
               </div>
 
               {/* KICK SOMEONE — awards 3 pts to dhappa caller */}
-              <button onClick={handleKickSomeone} style={{width:"100%",padding:"16px 0",borderRadius:12,background:"#FF6B6B22",border:"1px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:"pointer",marginBottom:6,letterSpacing:1}}>
+              <button onClick={handleKickSomeone} style={{width:"100%",padding:"20px 0",borderRadius:12,background:"#FF6B6B22",border:"2px solid #FF6B6B",color:"#FF6B6B",fontFamily:"'Courier New',monospace",fontSize:18,fontWeight:900,cursor:"pointer",marginBottom:8,letterSpacing:1}}>
                 KICK SOMEONE 💀
               </button>
-              <div style={{color:"#FF6B6B99",fontSize:11,marginBottom:18,letterSpacing:1}}>
+              <div style={{color:"#FF6B6B99",fontSize:14,fontWeight:900,marginBottom:22,letterSpacing:1}}>
                 Awards you: <strong style={{color:"#FF6B6B"}}>+{DHAPPA_POINTS} pts</strong> · kicked player gets 0
               </div>
 
-              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
+              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"14px 0",borderRadius:10,background:"none",border:"2px solid #333",color:"#666",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
         )}
 
         {popup === "kick" && (
           <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#050508cc",zIndex:100}}>
-            <div style={{background:"#0a0a14",border:"1px solid #FF6B6B44",borderRadius:24,padding:28,textAlign:"center",width:"90%",maxWidth:420}}>
-              <div style={{color:"#FF6B6B",fontSize:18,fontWeight:900,letterSpacing:3,marginBottom:6}}>KICK SOMEONE OUT</div>
-              <div style={{color:"#555",fontSize:11,marginBottom:18,letterSpacing:1}}>Kicker gets +{DHAPPA_POINTS} pts and stays in the game</div>
+            <div style={{background:"#0a0a14",border:"2px solid #FF6B6B44",borderRadius:24,padding:32,textAlign:"center",width:"90%",maxWidth:460}}>
+              <div style={{color:"#FF6B6B",fontSize:24,fontWeight:900,letterSpacing:3,marginBottom:8}}>KICK SOMEONE OUT</div>
+              <div style={{color:"#666",fontSize:14,fontWeight:900,marginBottom:22,letterSpacing:1}}>Kicker gets +{DHAPPA_POINTS} pts and stays in the game</div>
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:18,textAlign:"left"}}>
                 <div>
-                  <div style={{color:"#555",fontSize:10,letterSpacing:2,marginBottom:8}}>KICKER</div>
+                  <div style={{color:"#666",fontSize:13,fontWeight:900,letterSpacing:2,marginBottom:10}}>KICKER</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {alivePlayers.map((p) => {
                       const idx = players.indexOf(p);
                       const selected = idx === kickActor;
                       return (
                         <button key={`actor-${idx}`} onClick={() => { setKickActor(idx); if (kickTarget === idx) setKickTarget(null); }}
-                          style={{padding:"10px 8px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`2px solid ${p.color}`:"1px solid #222",color:selected?p.color:"#777",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer"}}>
+                          style={{padding:"14px 10px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`3px solid ${p.color}`:"2px solid #222",color:selected?p.color:"#888",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer"}}>
                           {p.name}
                         </button>
                       );
@@ -1107,7 +1107,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <div style={{color:"#555",fontSize:10,letterSpacing:2,marginBottom:8}}>KICKED OUT</div>
+                  <div style={{color:"#666",fontSize:13,fontWeight:900,letterSpacing:2,marginBottom:10}}>KICKED OUT</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     {alivePlayers.map((p) => {
                       const idx = players.indexOf(p);
@@ -1116,7 +1116,7 @@ export default function App() {
                       return (
                         <button key={`target-${idx}`} onClick={() => !disabled && handleSelectKick(idx)}
                           disabled={disabled}
-                          style={{padding:"10px 8px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`2px solid ${p.color}`:"1px solid #222",color:disabled?"#333":selected?p.color:"#777",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.55:1}}>
+                          style={{padding:"14px 10px",borderRadius:10,background:selected?`${p.color}22`:"#050508",border:selected?`3px solid ${p.color}`:"2px solid #222",color:disabled?"#333":selected?p.color:"#888",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:disabled?"not-allowed":"pointer",opacity:disabled?0.55:1}}>
                           {p.name}
                         </button>
                       );
@@ -1126,10 +1126,10 @@ export default function App() {
               </div>
 
               <button onClick={handleConfirmKick} disabled={kickActor === null || kickTarget === null || kickActor === kickTarget}
-                style={{width:"100%",padding:"14px 0",borderRadius:12,background:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#FF6B6B" : "#221111",border:"none",color:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#fff" : "#553333",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,cursor:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "pointer" : "not-allowed",marginBottom:12,letterSpacing:2}}>
+                style={{width:"100%",padding:"18px 0",borderRadius:12,background:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#FF6B6B" : "#221111",border:"none",color:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "#fff" : "#553333",fontFamily:"'Courier New',monospace",fontSize:17,fontWeight:900,cursor:kickActor !== null && kickTarget !== null && kickActor !== kickTarget ? "pointer" : "not-allowed",marginBottom:14,letterSpacing:2}}>
                 CONFIRM KICK
               </button>
-              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"10px 0",borderRadius:10,background:"none",border:"1px solid #333",color:"#555",fontFamily:"'Courier New',monospace",fontSize:12,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
+              <button onClick={handleCancelDhappa} style={{width:"100%",padding:"14px 0",borderRadius:10,background:"none",border:"2px solid #333",color:"#666",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>CANCEL</button>
             </div>
           </div>
         )}
@@ -1139,17 +1139,17 @@ export default function App() {
       {/* Action Dashboard */}
       <div className="action-dashboard" style={{position:"relative",background:"#050508",borderTop:"1px solid #111",overflow:"visible",paddingBottom:24}}>
         {/* Buttons first */}
-        <div style={{display:"flex",gap:12,padding:"12px 20px 10px",boxSizing:"border-box"}}>
+        <div style={{display:"flex",gap:12,padding:"14px 20px 12px",boxSizing:"border-box"}}>
           <button onClick={() => {
             if (!started) { setStarted(true); setPaused(false); return; }
             passToNext(curGlobalIdx);
           }} disabled={!!winner}
-            style={{flex:2,padding:"14px 0",borderRadius:14,background:started?`${players[curGlobalIdx]?.color ?? '#FF6B6B'}22`:"#FF6B6B22",border:`2px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
+            style={{flex:2,padding:"18px 0",borderRadius:14,background:started?`${players[curGlobalIdx]?.color ?? '#FF6B6B'}22`:"#FF6B6B22",border:`3px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`,color:players[curGlobalIdx]?.color ?? '#FF6B6B',fontFamily:"'Courier New',monospace",fontSize:19,fontWeight:900,cursor:"pointer",letterSpacing:2}}>
             {started ? "PASS →" : "START / PASS →"}
           </button>
           <button onClick={() => { if(started) setPaused(p=>!p); }}
             disabled={!started || !!winner}
-            style={{flex:1,padding:"14px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`2px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#444",fontFamily:"'Courier New',monospace",fontSize:13,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
+            style={{flex:1,padding:"18px 0",borderRadius:14,background:paused?"#FFD93D22":"#0a0a14",border:`3px solid ${paused?"#FFD93D":"#222"}`,color:paused?"#FFD93D":"#555",fontFamily:"'Courier New',monospace",fontSize:17,fontWeight:900,cursor:"pointer",letterSpacing:1}}>
             {paused?"▶ GO":"⏸ PAUSE"}
           </button>
         </div>
