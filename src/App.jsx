@@ -387,6 +387,9 @@ export default function App() {
   const lastTickedSecRef = useRef(-1);
 
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const turnIndicatorRotationRef = useRef(0);
+  const turnIndicatorReadyRef = useRef(false);
+  const [turnIndicatorRotation, setTurnIndicatorRotation] = useState(0);
   const [centerHovered, setCenterHovered] = useState(false);
 
   useEffect(() => {
@@ -413,6 +416,9 @@ export default function App() {
     setRoundEvents([]);
     roundEventsRef.current = [];
     lastTickedSecRef.current = -1;
+    turnIndicatorRotationRef.current = 0;
+    turnIndicatorReadyRef.current = false;
+    setTurnIndicatorRotation(0);
     setKickActor(null);
     setKickTarget(null);
     setRoundLoser(null);
@@ -479,6 +485,27 @@ export default function App() {
 
   const aliveIndices = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
   const curGlobalIdx = aliveIndices[activeIdx % Math.max(aliveIndices.length, 1)];
+  const totalPlayers = config?.n ?? players.length;
+  const sectorByOrig = getAliveSectors(alivePlayers, totalPlayers, -Math.PI / 2);
+  const activeSectorForTurn = players[curGlobalIdx] ? sectorByOrig.get(players[curGlobalIdx].originalIdx) : null;
+  const activeSectorMidDeg = activeSectorForTurn ? activeSectorForTurn.midAngle * 180 / Math.PI : null;
+
+  useEffect(() => {
+    if (activeSectorMidDeg === null) return;
+    if (!turnIndicatorReadyRef.current) {
+      turnIndicatorReadyRef.current = true;
+      turnIndicatorRotationRef.current = activeSectorMidDeg;
+      setTurnIndicatorRotation(activeSectorMidDeg);
+      return;
+    }
+
+    const current = turnIndicatorRotationRef.current;
+    const delta = ((activeSectorMidDeg - (current % 360)) + 360) % 360;
+    if (delta < 0.001) return;
+
+    turnIndicatorRotationRef.current = current + delta;
+    setTurnIndicatorRotation(turnIndicatorRotationRef.current);
+  }, [activeSectorMidDeg]);
 
   useEffect(() => {
     if (!started || !players.length) return;
@@ -495,6 +522,44 @@ export default function App() {
     const nextPos = (curPos - 1 + alive.length) % alive.length;
     setActiveIdx(nextPos);
   }, [started, paused, winner, popup, players, curGlobalIdx]);
+
+  const resetGame = useCallback(() => {
+    clearInterval(intervalRef.current);
+    setScreen("setup");
+    setConfig(null);
+    setPlayers([]);
+    setActiveIdx(0);
+    setTimes([]);
+    setPaused(true);
+    setStarted(false);
+    setPopup(null);
+    setKickActor(null);
+    setKickTarget(null);
+    setWinner(null);
+    setHighlightKick(false);
+    setRoundResult(null);
+    setRoundNum(1);
+    setTargetScore(11);
+    setCumulativeScores({});
+    setAllPlayers([]);
+    setRoundEvents([]);
+    setGameWinner(null);
+    setShowRoundStart(false);
+    setRoundStartInfo(null);
+    setShowGameOver(false);
+    setRoundLoser(null);
+    setShowRoundLoser(false);
+    finishOrderRef.current = [];
+    dhappaPlayerRef.current = null;
+    roundBonusesRef.current = {};
+    winnerPointsRef.current = {};
+    iWonCountRef.current = 0;
+    roundEventsRef.current = [];
+    lastTickedSecRef.current = -1;
+    turnIndicatorRotationRef.current = 0;
+    turnIndicatorReadyRef.current = false;
+    setTurnIndicatorRotation(0);
+  }, []);
 
   const addRoundEvent = (globalIdx, reason, pts, targetIdx = null) => {
     const ev = { globalIdx, reason, pts, targetIdx };
@@ -636,15 +701,11 @@ export default function App() {
     setPopup("dhappa");
   };
 
-  // Points for "I WON" = next winner slot, no dhappa bonus added to display (dhappa bonus tracked separately)
+  // Points for "I WON" = next winner slot. Dhappa bonus is only for kicking someone out.
   const nextIWonPoints = config ? getNextWinnerPoints(iWonCountRef.current, config.n) : 0;
 
   const handleIWon = () => {
     const dhappaCallerIdx = curGlobalIdx;
-    if (dhappaPlayerRef.current === null) {
-      dhappaPlayerRef.current = dhappaCallerIdx;
-      addRoundBonus(dhappaCallerIdx, DHAPPA_POINTS);
-    }
     const pts = getNextWinnerPoints(iWonCountRef.current, config?.n ?? 2);
     winnerPointsRef.current = { ...winnerPointsRef.current, [dhappaCallerIdx]: pts };
     iWonCountRef.current += 1;
@@ -765,19 +826,16 @@ export default function App() {
   // ── GAME SCREEN ──
   const isPortrait = dimensions.height > dimensions.width;
   const cx = dimensions.width / 2;
-  const clockHeight = isPortrait ? Math.max(dimensions.height - 94, dimensions.width + 140) : Math.max(dimensions.height, 560);
-  const cy = isPortrait ? (dimensions.width / 2) + 60 : clockHeight / 2;
-  const baseScale = Math.min(dimensions.width, dimensions.height);
+  const minClockHeight = isPortrait ? Math.max(dimensions.width + 140, 560) : 560;
+  const clockHeight = Math.max(dimensions.height, minClockHeight);
+  const cy = clockHeight / 2;
+  const baseScale = Math.min(dimensions.width, clockHeight);
   const centerR = baseScale * 0.24;
-  const outerR = Math.max(dimensions.width, dimensions.height) * 2.0;
+  const outerR = Math.max(dimensions.width, clockHeight) * 2.0;
   const timeR = baseScale * 0.385;
   const n = aliveCount;
-  const rotOffset = -Math.PI / 2;
   const dhappaFontSize = (centerR * 2 * 0.95) / 6;
   const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
-  // Use originalIdx to keep each player's sector anchored to its starting position
-  const totalPlayers = config?.n ?? players.length;
-  const sectorByOrig = getAliveSectors(alivePlayers, totalPlayers, rotOffset);
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -806,7 +864,10 @@ export default function App() {
       {/* Main Clock Area */}
       <div className="clock-view-wrapper" style={{position:"relative",width:"100%",height:clockHeight,overflow:"hidden",background:"#050508"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,zIndex:20,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",boxSizing:"border-box"}}>
-          <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#666",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>← SETUP</button>
+            <button onClick={resetGame} style={{background:"#05050899",border:"1px solid #333",borderRadius:8,color:"#FF6B6B",padding:"6px 14px",fontFamily:"'Courier New',monospace",fontSize:11,cursor:"pointer",letterSpacing:2,backdropFilter:"blur(4px)"}}>RESET</button>
+          </div>
           <div style={{display:"flex",gap:12,alignItems:"center"}}>
             <div style={{color:"#333",fontSize:10,letterSpacing:2}}>R{roundNum - 1}</div>
             <div style={{color: paused ? "#FFD93D" : "#FF6B6B", fontSize:11, letterSpacing:3}}>
@@ -924,16 +985,16 @@ export default function App() {
             const activeSector = sectorByOrig.get(activePlayer.originalIdx);
             if (!activeSector) return null;
             const arcR = centerR - baseScale * 0.012;
-            const halfSpanRad = Math.max((activeSector.angle2 - activeSector.angle1) / 2 - 0.08, 0.12);
+            const halfSpanRad = Math.max((activeSector.angle2 - activeSector.angle1) / 2, 0.12);
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
             const y2a = cy + arcR * Math.sin(halfSpanRad);
-            const activeRotation = activeSector.midAngle * 180 / Math.PI;
+            const largeArc = halfSpanRad * 2 > Math.PI ? 1 : 0;
             return (
-              <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 0 1 ${x2a} ${y2a}`}
-                fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="round"
-                style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${activeRotation}deg)`,transition:"transform .35s cubic-bezier(.4,0,.2,1)"}}
+              <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${largeArc} 1 ${x2a} ${y2a}`}
+                fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="butt"
+                style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${turnIndicatorRotation}deg)`,transition:"transform .35s linear"}}
               />
             );
           })()}
@@ -972,7 +1033,6 @@ export default function App() {
               </button>
               <div style={{color:"#6BCB7799",fontSize:11,marginBottom:18,letterSpacing:1}}>
                 Awards you: <strong style={{color:"#6BCB77"}}>+{nextIWonPoints} pts</strong>
-                {dhappaPlayerRef.current === null && <span> + <strong style={{color:"#FF6B6B"}}>+{DHAPPA_POINTS} dhappa</strong></span>}
               </div>
 
               {/* KICK SOMEONE — awards 3 pts to dhappa caller */}
