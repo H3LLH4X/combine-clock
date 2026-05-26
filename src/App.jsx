@@ -870,7 +870,7 @@ export default function App() {
   const timeR = baseScale * 0.385;
   const n = aliveCount;
   const dhappaFontSize = centerR * 0.54;
-  const timerFontSize = baseScale * (n <= 2 ? 0.19 : n <= 3 ? 0.15 : n <= 4 ? 0.125 : 0.1);
+  const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -980,7 +980,7 @@ export default function App() {
                   </textPath>
                 </text>
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
-                  <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="'Quantico', cursive" style={{letterSpacing:1}}>
+                  <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} stroke={dispColor} strokeWidth={baseScale * 0.0025} paintOrder="stroke fill" fontFamily="'Quantico', cursive" style={{letterSpacing:1}}>
                     {formatTime(t)}
                   </text>
                   {isKickHighlight && (
@@ -1038,6 +1038,9 @@ export default function App() {
           <text x={cx} y={cy - dhappaFontSize * 0.08} textAnchor="middle" dominantBaseline="middle"
             fontSize={dhappaFontSize} fontWeight={900}
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
+            stroke={centerHovered ? "#ff9999" : "#FF6B6B"}
+            strokeWidth={baseScale * 0.004}
+            paintOrder="stroke fill"
             fontFamily="'Courier New',monospace"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
