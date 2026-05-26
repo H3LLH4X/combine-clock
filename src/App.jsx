@@ -67,7 +67,7 @@ function getAliveSectors(alivePlayers, totalPlayers, rotOffset = 0) {
     sectors.set(center.origIdx, {
       angle1: (prev.angle + center.angle) / 2,
       angle2: (center.angle + next.angle) / 2,
-      midAngle: center.angle,
+      midAngle: (prev.angle + (center.angle * 2) + next.angle) / 4,
     });
   });
 
@@ -228,7 +228,7 @@ function GameOverPopup({ winner, cumulativeScores, players, onPlayAgain }) {
 }
 
 // ── SETUP SCREEN ──
-function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange }) {
+function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange, turnDirection, onTurnDirectionChange }) {
   const [n, setN] = useState(existingPlayers?.length || 3);
   const [mins, setMins] = useState(5);
   const [names, setNames] = useState(
@@ -282,6 +282,21 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
           <div style={{marginBottom:20}}>
             <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>MINUTES PER PLAYER</div>
             <input type="number" min={1} max={60} value={mins} onChange={e=>setMins(Number(e.target.value))} style={{width:"100%",background:"#050508",border:"1px solid #222",borderRadius:8,padding:"10px 14px",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:18,outline:"none",boxSizing:"border-box"}} />
+          </div>
+
+          <div style={{marginBottom:20}}>
+            <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:10}}>TURN DIRECTION</div>
+            <div style={{display:"flex",gap:8}}>
+              {[
+                ["clockwise", "CLOCKWISE"],
+                ["counterclockwise", "COUNTERCLOCKWISE"],
+              ].map(([value, label]) => (
+                <button key={value} onClick={() => onTurnDirectionChange(value)}
+                  style={{flex:1,padding:"10px 4px",borderRadius:10,border:turnDirection===value?"2px solid #4D96FF":"1px solid #222",background:turnDirection===value?"#4D96FF22":"#050508",color:turnDirection===value?"#4D96FF":"#444",fontFamily:"'Courier New',monospace",fontSize:11,fontWeight:900,cursor:"pointer",letterSpacing:0}}>
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div style={{marginBottom:24}}>
@@ -372,6 +387,7 @@ export default function App() {
   // Persistent across rounds
   const [roundNum, setRoundNum] = useState(1);
   const [targetScore, setTargetScore] = useState(11);
+  const [turnDirection, setTurnDirection] = useState("counterclockwise");
   const [cumulativeScores, setCumulativeScores] = useState({});
   const [allPlayers, setAllPlayers] = useState([]);
   const [roundEvents, setRoundEvents] = useState([]);
@@ -424,20 +440,27 @@ export default function App() {
     setRoundLoser(null);
     setShowRoundLoser(false);
 
-    const startPlayerIdx = Math.floor(Math.random() * n);
-    setRoundStartInfo({ roundNum, starterName: names[startPlayerIdx], starterColor: COLORS[startPlayerIdx], startPlayerIdx });
-    setShowRoundStart(true);
-
-    if (allPlayers.length === 0) {
+    const rosterChanged = allPlayers.length !== ps.length || allPlayers.some((p, i) => p.name !== ps[i]?.name);
+    const nextRoundNum = rosterChanged ? 1 : roundNum;
+    if (allPlayers.length === 0 || rosterChanged) {
       setAllPlayers(ps);
       const initialScores = {};
       ps.forEach((_, i) => { initialScores[i] = 0; });
       setCumulativeScores(initialScores);
+      if (rosterChanged) {
+        setRoundNum(1);
+        setGameWinner(null);
+        setShowGameOver(false);
+      }
     }
 
-    setConfig({n, secs, names});
+    const startPlayerIdx = Math.floor(Math.random() * n);
+    setRoundStartInfo({ roundNum: nextRoundNum, starterName: names[startPlayerIdx], starterColor: COLORS[startPlayerIdx], startPlayerIdx });
+    setShowRoundStart(true);
+
+    setConfig({n, secs, names, turnDirection});
     setScreen("game");
-  }, [roundNum, allPlayers]);
+  }, [roundNum, allPlayers, turnDirection]);
 
   const handleRoundStartClose = useCallback(() => {
     setShowRoundStart(false);
@@ -500,28 +523,33 @@ export default function App() {
     }
 
     const current = turnIndicatorRotationRef.current;
-    const delta = ((activeSectorMidDeg - (current % 360)) + 360) % 360;
-    if (delta < 0.001) return;
+    const normalizedCurrent = ((current % 360) + 360) % 360;
+    const normalizedTarget = ((activeSectorMidDeg % 360) + 360) % 360;
+    const clockwiseDelta = ((normalizedTarget - normalizedCurrent) + 360) % 360;
+    const counterDelta = -((normalizedCurrent - normalizedTarget + 360) % 360);
+    const delta = turnDirection === "clockwise" ? clockwiseDelta : counterDelta;
+    if (Math.abs(delta) < 0.001) return;
 
     turnIndicatorRotationRef.current = current + delta;
     setTurnIndicatorRotation(turnIndicatorRotationRef.current);
-  }, [activeSectorMidDeg]);
+  }, [activeSectorMidDeg, turnDirection]);
 
   useEffect(() => {
     if (!started || !players.length) return;
     if (times[curGlobalIdx] <= 0) kickPlayer(curGlobalIdx, "timeout");
   }, [times, started, players, curGlobalIdx]);
 
-  // PASS: goes counter-clockwise (left = index - 1)
+  // PASS follows the selected table direction.
   const passToNext = useCallback((fromGlobal) => {
     if (!started) { setStarted(true); setPaused(false); return; }
     if (paused || winner || popup) return;
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
     const curPos = alive.indexOf(fromGlobal ?? curGlobalIdx);
-    const nextPos = (curPos - 1 + alive.length) % alive.length;
+    const step = turnDirection === "clockwise" ? 1 : -1;
+    const nextPos = (curPos + step + alive.length) % alive.length;
     setActiveIdx(nextPos);
-  }, [started, paused, winner, popup, players, curGlobalIdx]);
+  }, [started, paused, winner, popup, players, curGlobalIdx, turnDirection]);
 
   const resetGame = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -540,6 +568,7 @@ export default function App() {
     setRoundResult(null);
     setRoundNum(1);
     setTargetScore(11);
+    setTurnDirection("counterclockwise");
     setCumulativeScores({});
     setAllPlayers([]);
     setRoundEvents([]);
@@ -679,13 +708,16 @@ export default function App() {
         finishOrderRef.current = fullOrder;
         setTimeout(() => endRound(fullOrder, dhappaPlayerRef.current, next, config?.n ?? prev.length, loserIdx), 0);
       } else {
-        // After kickout, move counter-clockwise: go to next player in same direction
         const aliveIdxs = next.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
         const oldAliveIdxs = prev.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
         const kickedPos = oldAliveIdxs.indexOf(globalIdx);
-        // Counter-clockwise = go to index-1 = in new list, kickedPos-1 (wrapping)
-        const nextActivePos = ((kickedPos - 1) + aliveIdxs.length) % aliveIdxs.length;
-        setActiveIdx(nextActivePos);
+        const nextActivePos = turnDirection === "clockwise"
+          ? kickedPos % aliveIdxs.length
+          : ((kickedPos - 1) + aliveIdxs.length) % aliveIdxs.length;
+        const avoidIdx = reason === "kicked" ? (kickActor ?? curGlobalIdx) : null;
+        const shouldSkipCurrent = avoidIdx !== null && aliveIdxs.length > 1 && aliveIdxs[nextActivePos] === avoidIdx;
+        const step = turnDirection === "clockwise" ? 1 : -1;
+        setActiveIdx(shouldSkipCurrent ? ((nextActivePos + step + aliveIdxs.length) % aliveIdxs.length) : nextActivePos);
       }
       return next;
     });
@@ -694,7 +726,7 @@ export default function App() {
     setKickTarget(null);
     setHighlightKick(false);
     setPaused(false);
-  }, [endRound, config]);
+  }, [endRound, config, turnDirection, kickActor, curGlobalIdx]);
 
   const handleDhappa = () => {
     setPaused(true);
@@ -731,11 +763,12 @@ export default function App() {
         finishOrderRef.current = fullOrder;
         setTimeout(() => endRound(fullOrder, dhappaCallerIdx, next, config?.n ?? prev.length, loserIdx), 0);
       } else {
-        // Move counter-clockwise after I WON
         const aliveIdxs = next.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
         const oldAliveIdxs = prev.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
         const kickedPos = oldAliveIdxs.indexOf(dhappaCallerIdx);
-        const nextActivePos = ((kickedPos - 1) + aliveIdxs.length) % aliveIdxs.length;
+        const nextActivePos = turnDirection === "clockwise"
+          ? kickedPos % aliveIdxs.length
+          : ((kickedPos - 1) + aliveIdxs.length) % aliveIdxs.length;
         setActiveIdx(nextActivePos);
       }
       return next;
@@ -785,6 +818,8 @@ export default function App() {
         roundNum={roundNum}
         targetScore={targetScore}
         onTargetChange={setTargetScore}
+        turnDirection={turnDirection}
+        onTurnDirectionChange={setTurnDirection}
       />
     );
   }
