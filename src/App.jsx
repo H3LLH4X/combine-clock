@@ -421,22 +421,6 @@ export default function App() {
     }
   }, [roundStartInfo]);
 
-
-  useEffect(() => {
-    if (screen === "game" && config && players.length === 0 && config.names?.length) {
-      const ps = config.names.map((name, i) => ({
-        name,
-        color: COLORS[i],
-        dark: DARK[i],
-        vdark: VDARK[i],
-        alive: true,
-        originalIdx: i
-      }));
-      setPlayers(ps);
-      setTimes(Array(config.n).fill(config.secs));
-    }
-  }, [screen, config, players.length]);
-
   const alivePlayers = players.filter(p => p.alive);
   const aliveCount = alivePlayers.length;
 
@@ -837,6 +821,11 @@ export default function App() {
   fontSize:18
 }}>
   Players: {players.length} | Alive: {alivePlayers.length}
+</div>
+
+
+<div style={{position:"absolute",top:90,left:20,color:"#0f0",zIndex:99999,fontSize:16}}>
+ Config: {config ? `${config.n} players / ${config.names?.length||0} names` : "NULL"}
 </div>
 
 <svg width="100%" height={clockHeight}
