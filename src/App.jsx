@@ -421,6 +421,22 @@ export default function App() {
     }
   }, [roundStartInfo]);
 
+
+  useEffect(() => {
+    if (screen === "game" && config && players.length === 0 && config.names?.length) {
+      const ps = config.names.map((name, i) => ({
+        name,
+        color: COLORS[i],
+        dark: DARK[i],
+        vdark: VDARK[i],
+        alive: true,
+        originalIdx: i
+      }));
+      setPlayers(ps);
+      setTimes(Array(config.n).fill(config.secs));
+    }
+  }, [screen, config, players.length]);
+
   const alivePlayers = players.filter(p => p.alive);
   const aliveCount = alivePlayers.length;
 
