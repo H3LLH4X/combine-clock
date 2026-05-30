@@ -811,7 +811,19 @@ export default function App() {
           </div>
         </div>
 
-        <svg width="100%" height={clockHeight}
+        
+<div style={{
+  position:"absolute",
+  top:60,
+  left:20,
+  color:"#fff",
+  zIndex:99999,
+  fontSize:18
+}}>
+  Players: {players.length} | Alive: {alivePlayers.length}
+</div>
+
+<svg width="100%" height={clockHeight}
           viewBox={`0 0 ${w} ${clockHeight}`}
           ref={svgRef} style={{display:"block"}}>
           <rect x={0} y={0} width={w} height={clockHeight} fill="#050508" />
@@ -825,8 +837,12 @@ export default function App() {
             const { angle1, angle2, midAngle } = sector;
 
             const totalSecs = config?.secs ?? lastConfig?.secs ?? 300;
-            const t = times[globalIdx] ?? 0;
-            const pct = totalSecs > 0 ? t / totalSecs : 1;
+            const safeTime =
+              typeof times[globalIdx] === "number"
+                ? times[globalIdx]
+                : totalSecs;
+            const t = safeTime;
+            const pct = totalSecs > 0 ? safeTime / totalSecs : 1;
             
             // Calculates shrinking radius down to 0 remaining time safely
             const currentR = centerR + (maxR - centerR) * Math.max(pct, 0.005);
@@ -869,9 +885,6 @@ export default function App() {
               arcSweep = 0;
             }
             const namePathId = `namepath-${origIdx}`;
-            const nameR = centerR + (currentR - centerR) * 0.35;
-            const nameX = cx + nameR * Math.cos(midAngle);
-            const nameY = cy + nameR * Math.sin(midAngle);
 
             return (
               <g key={globalIdx}
@@ -903,21 +916,13 @@ export default function App() {
                   </text>
                 )}
 
-                
-                <text
-                  x={nameX}
-                  y={nameY}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="#ffffff"
-                  fontSize={baseScale * 0.045}
-                  fontWeight="bold"
-                  stroke="#000000"
-                  strokeWidth="1"
-                  paintOrder="stroke"
-                  fontFamily={FONT}
-                >
-                  {player.name.toUpperCase()}
+                <defs>
+                  <path id={namePathId} d={`M ${arcSx} ${arcSy} A ${nr} ${nr} 0 0 ${arcSweep} ${arcEx} ${arcEy}`} fill="none" />
+                </defs>
+                <text fontFamily={FONT} fontSize={baseScale * 0.04} fill="#ffffff" fontWeight="bold" style={{letterSpacing:"2px"}}>
+                  <textPath href={`#${namePathId}`} startOffset="50%" textAnchor="middle">
+                    {player.name.toUpperCase()}
+                  </textPath>
                 </text>
 
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
