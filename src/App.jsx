@@ -763,7 +763,7 @@ export default function App() {
   const baseScale = Math.min(w, clockHeight);
   
   const centerR = baseScale * 0.24;
-  const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
+  const maxR = Math.max(w, clockHeight) * 0.75; // Large but stable
   const timeR = centerR + (maxR - centerR) * 0.65;
   const n = aliveCount;
   
@@ -812,16 +812,7 @@ export default function App() {
         </div>
 
         
-<div style={{
-  position:"absolute",
-  top:60,
-  left:20,
-  color:"#fff",
-  zIndex:99999,
-  fontSize:18
-}}>
-  Players: {players.length} | Alive: {alivePlayers.length}
-</div>
+
 
 <svg width="100%" height={clockHeight}
           viewBox={`0 0 ${w} ${clockHeight}`}
