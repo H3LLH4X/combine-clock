@@ -270,7 +270,12 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             </div>
           </div>
 
-          <button onClick={()=>onStart({n, secs:mins*60, names:names.slice(0,n)})}
+          <button onClick={()=>{
+              const finalNames = Array.from({length:n}, (_,i) =>
+                (names[i] && String(names[i]).trim()) || `Player ${i+1}`
+              );
+              onStart({n, secs:mins*60, names:finalNames});
+            }}
             style={{width:"100%",padding:16,borderRadius:12,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:FONT,fontSize:17,letterSpacing:2,cursor:"pointer"}}>
             {hasHistory ? `START ROUND ${roundNum} →` : "START →"}
           </button>
@@ -763,7 +768,7 @@ export default function App() {
   const baseScale = Math.min(w, clockHeight);
   
   const centerR = baseScale * 0.24;
-  const maxR = Math.min(w, clockHeight) * 0.95;
+  const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
   const timeR = centerR + (maxR - centerR) * 0.65;
   const n = aliveCount;
   
