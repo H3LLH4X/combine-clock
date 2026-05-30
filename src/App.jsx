@@ -769,7 +769,9 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
-  const timeR = centerR + (maxR - centerR) * 0.38;
+  const timeR =
+    centerR + (maxR - centerR) *
+    (n <= 2 ? 0.42 : n <= 3 ? 0.46 : n <= 4 ? 0.50 : n <= 5 ? 0.54 : 0.58);
   const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
@@ -850,7 +852,7 @@ export default function App() {
             const pct = totalSecs > 0 ? safeTime / totalSecs : 1;
             
             // Calculates shrinking radius down to 0 remaining time safely
-            const currentR = centerR + (maxR - centerR) * Math.max(Math.pow(pct, 0.55), 0.005);
+            const currentR = centerR + (maxR - centerR) * Math.max(pct, 0.005);
             
             const x1 = cx + currentR * Math.cos(angle1);
             const y1 = cy + currentR * Math.sin(angle1);
@@ -870,8 +872,9 @@ export default function App() {
 
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
-            const deg = (midAngle * 180 / Math.PI) - 90;
-            const dispColor = '#ffffff';
+            let deg = (midAngle * 180 / Math.PI) + 90;
+            if (deg > 90 && deg < 270) deg -= 180;
+            const dispColor = isLow ? "#3a0000" : player.vdark;
 
             const halfArc = Math.PI * 0.18;
             const nr = centerR + baseScale * 0.05;
