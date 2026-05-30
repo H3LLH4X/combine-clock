@@ -769,14 +769,16 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
+  const timerRadiusFactor = Math.max(0.34, Math.min(0.50, 520 / Math.max(w, h)));
+  const timeR = centerR + (maxR - centerR) * timerRadiusFactor;
   const n = aliveCount;
-  const timeR =
-    centerR + (maxR - centerR) *
-    (n <= 2 ? 0.42 : n <= 3 ? 0.46 : n <= 4 ? 0.50 : n <= 5 ? 0.54 : 0.58);
   
   const dhappaFontSize = centerR * 0.58;
   const dhappaTextLength = centerR * 1.72;
-  const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
+  const timerFontSize = Math.max(
+    26,
+    Math.min(Math.min(w, h) * (n <= 2 ? 0.085 : n <= 3 ? 0.075 : n <= 4 ? 0.066 : 0.058), 112)
+  );
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:FONT,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -873,8 +875,8 @@ export default function App() {
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
             let deg = (midAngle * 180 / Math.PI) + 90;
-            if (deg > 90 && deg < 270) deg -= 180;
-            const dispColor = isLow ? "#3a0000" : player.vdark;
+            if (deg > 90 && deg < 270) deg += 180;
+            const dispColor = '#ffffff';
 
             const halfArc = Math.PI * 0.18;
             const nr = centerR + baseScale * 0.05;
@@ -936,7 +938,7 @@ export default function App() {
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
                   <text textAnchor="middle" dominantBaseline="middle"
                     fontSize={timerFontSize} fill={dispColor}
-                    stroke={dispColor} strokeWidth={baseScale * 0.003}
+                    stroke="#000000" strokeWidth={Math.max(2, baseScale * 0.006)}
                     paintOrder="stroke fill" fontFamily={FONT}>
                     {formatTime(t)}
                   </text>
