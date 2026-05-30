@@ -769,12 +769,12 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
-  const timeR = centerR + (maxR - centerR) * 0.52;
+  const timeR = centerR + (maxR - centerR) * 0.38;
   const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
   const dhappaTextLength = centerR * 1.72;
-  const timerFontSize = baseScale * (n <= 2 ? 0.23 : n <= 3 ? 0.18 : n <= 4 ? 0.15 : 0.125);
+  const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:FONT,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -850,7 +850,7 @@ export default function App() {
             const pct = totalSecs > 0 ? safeTime / totalSecs : 1;
             
             // Calculates shrinking radius down to 0 remaining time safely
-            const currentR = centerR + (maxR - centerR) * Math.max(pct, 0.005);
+            const currentR = centerR + (maxR - centerR) * Math.max(Math.pow(pct, 0.55), 0.005);
             
             const x1 = cx + currentR * Math.cos(angle1);
             const y1 = cy + currentR * Math.sin(angle1);
@@ -871,7 +871,7 @@ export default function App() {
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
             const deg = (midAngle * 180 / Math.PI) - 90;
-            const dispColor = isLow ? "#3a0000" : player.vdark;
+            const dispColor = '#ffffff';
 
             const halfArc = Math.PI * 0.18;
             const nr = centerR + baseScale * 0.05;
@@ -971,7 +971,7 @@ export default function App() {
             const s = sectorByOrig.get(ap.originalIdx);
             if (!s) return null;
             const arcR = centerR - baseScale * 0.012;
-            const halfSpanRad = (s.angle2 - s.angle1) / 2;
+            const halfSpanRad = Math.max((s.angle2 - s.angle1) / 2, 0.12);
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
@@ -979,7 +979,7 @@ export default function App() {
             const la = halfSpanRad * 2 > Math.PI ? 1 : 0;
             return (
               <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${la} 1 ${x2a} ${y2a}`}
-                fill="none" stroke={ap.color} strokeWidth={baseScale * 0.022} strokeLinecap="round"
+                fill="none" stroke={ap.color} strokeWidth={baseScale * 0.018} strokeLinecap="round"
                 style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${turnIndicatorRotation}deg)`,transition:"transform .35s linear"}}
               />
             );
