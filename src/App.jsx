@@ -769,12 +769,12 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
-  const timeR = centerR + (maxR - centerR) * 0.72;
+  const timeR = centerR + (maxR - centerR) * 0.52;
   const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
   const dhappaTextLength = centerR * 1.72;
-  const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
+  const timerFontSize = baseScale * (n <= 2 ? 0.23 : n <= 3 ? 0.18 : n <= 4 ? 0.15 : 0.125);
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:FONT,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -948,7 +948,7 @@ export default function App() {
             if (!sector) return null;
             const angle = sector.angle1;
             const pv = [cx + centerR * Math.cos(angle), cy + centerR * Math.sin(angle)];
-            const ev = [cx + maxR * Math.cos(angle), cy + maxR * Math.sin(angle)];
+            const ev = [cx + baseScale * 1.5 * Math.cos(angle), cy + baseScale * 1.5 * Math.sin(angle)];
             return <line key={`div-${player.originalIdx}`} x1={pv[0]} y1={pv[1]} x2={ev[0]} y2={ev[1]} stroke="#050508" strokeWidth={3} />;
           })}
 
@@ -971,7 +971,7 @@ export default function App() {
             const s = sectorByOrig.get(ap.originalIdx);
             if (!s) return null;
             const arcR = centerR - baseScale * 0.012;
-            const halfSpanRad = Math.max((s.angle2 - s.angle1) / 2, 0.12);
+            const halfSpanRad = (s.angle2 - s.angle1) / 2;
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
@@ -979,7 +979,7 @@ export default function App() {
             const la = halfSpanRad * 2 > Math.PI ? 1 : 0;
             return (
               <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${la} 1 ${x2a} ${y2a}`}
-                fill="none" stroke={ap.color} strokeWidth={baseScale * 0.018} strokeLinecap="round"
+                fill="none" stroke={ap.color} strokeWidth={baseScale * 0.022} strokeLinecap="round"
                 style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${turnIndicatorRotation}deg)`,transition:"transform .35s linear"}}
               />
             );
