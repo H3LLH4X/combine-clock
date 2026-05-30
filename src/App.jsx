@@ -869,6 +869,9 @@ export default function App() {
               arcSweep = 0;
             }
             const namePathId = `namepath-${origIdx}`;
+            const nameR = centerR + (currentR - centerR) * 0.35;
+            const nameX = cx + nameR * Math.cos(midAngle);
+            const nameY = cy + nameR * Math.sin(midAngle);
 
             return (
               <g key={globalIdx}
@@ -900,13 +903,21 @@ export default function App() {
                   </text>
                 )}
 
-                <defs>
-                  <path id={namePathId} d={`M ${arcSx} ${arcSy} A ${nr} ${nr} 0 0 ${arcSweep} ${arcEx} ${arcEy}`} fill="none" />
-                </defs>
-                <text fontFamily={FONT} fontSize={baseScale * 0.04} fill="#ffffff" fontWeight="bold" style={{letterSpacing:"2px"}}>
-                  <textPath href={`#${namePathId}`} startOffset="50%" textAnchor="middle">
-                    {player.name.toUpperCase()}
-                  </textPath>
+                
+                <text
+                  x={nameX}
+                  y={nameY}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="#ffffff"
+                  fontSize={baseScale * 0.045}
+                  fontWeight="bold"
+                  stroke="#000000"
+                  strokeWidth="1"
+                  paintOrder="stroke"
+                  fontFamily={FONT}
+                >
+                  {player.name.toUpperCase()}
                 </text>
 
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
