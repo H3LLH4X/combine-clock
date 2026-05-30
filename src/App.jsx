@@ -768,8 +768,8 @@ export default function App() {
   const baseScale = Math.min(w, clockHeight);
   
   const centerR = baseScale * 0.24;
-  const maxR = Math.min(w, clockHeight) * 0.95;
-  const timeR = centerR + (maxR - centerR) * 0.65;
+  const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
+  const timeR = centerR + (maxR - centerR) * 0.72;
   const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
@@ -817,6 +817,16 @@ export default function App() {
         </div>
 
         
+<div style={{
+  position:"absolute",
+  top:60,
+  left:20,
+  color:"#fff",
+  zIndex:99999,
+  fontSize:18
+}}>
+  Players: {players.length} | Alive: {alivePlayers.length}
+</div>
 
 <svg width="100%" height={clockHeight}
           viewBox={`0 0 ${w} ${clockHeight}`}
@@ -860,8 +870,7 @@ export default function App() {
 
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
-            let deg = (midAngle * 180 / Math.PI) + 90;
-            if (deg > 90 && deg < 270) deg += 180;
+            const deg = (midAngle * 180 / Math.PI) - 90;
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
             const halfArc = Math.PI * 0.18;
@@ -939,7 +948,7 @@ export default function App() {
             if (!sector) return null;
             const angle = sector.angle1;
             const pv = [cx + centerR * Math.cos(angle), cy + centerR * Math.sin(angle)];
-            const ev = [cx + baseScale * 1.5 * Math.cos(angle), cy + baseScale * 1.5 * Math.sin(angle)];
+            const ev = [cx + maxR * Math.cos(angle), cy + maxR * Math.sin(angle)];
             return <line key={`div-${player.originalIdx}`} x1={pv[0]} y1={pv[1]} x2={ev[0]} y2={ev[1]} stroke="#050508" strokeWidth={3} />;
           })}
 
@@ -961,8 +970,8 @@ export default function App() {
             if (!ap) return null;
             const s = sectorByOrig.get(ap.originalIdx);
             if (!s) return null;
-            const arcR = centerR - baseScale * 0.01;
-            const halfSpanRad = (s.angle2 - s.angle1) / 2 - 0.015;
+            const arcR = centerR - baseScale * 0.012;
+            const halfSpanRad = Math.max((s.angle2 - s.angle1) / 2, 0.12);
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
