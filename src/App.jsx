@@ -853,7 +853,7 @@ export default function App() {
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
             const halfArc = Math.PI * 0.18;
-            const nr = centerR + baseScale * 0.008;
+            const nr = centerR + baseScale * 0.05;
             let arcSx, arcSy, arcEx, arcEy, arcSweep;
             if (turnDirection === "clockwise") {
               arcSx = cx + nr * Math.cos(midAngle - halfArc);
@@ -903,7 +903,7 @@ export default function App() {
                 <defs>
                   <path id={namePathId} d={`M ${arcSx} ${arcSy} A ${nr} ${nr} 0 0 ${arcSweep} ${arcEx} ${arcEy}`} fill="none" />
                 </defs>
-                <text fontFamily={FONT} fontSize={baseScale * 0.026} fill="#000000" fillOpacity={0.6} style={{letterSpacing:"2px"}}>
+                <text fontFamily={FONT} fontSize={baseScale * 0.04} fill="#ffffff" fontWeight="bold" style={{letterSpacing:"2px"}}>
                   <textPath href={`#${namePathId}`} startOffset="50%" textAnchor="middle">
                     {player.name.toUpperCase()}
                   </textPath>
