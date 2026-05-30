@@ -768,7 +768,7 @@ export default function App() {
   const baseScale = Math.min(w, clockHeight);
   
   const centerR = baseScale * 0.24;
-  const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
+  const maxR = Math.min(w, clockHeight) * 0.95;
   const timeR = centerR + (maxR - centerR) * 0.65;
   const n = aliveCount;
   
@@ -817,16 +817,6 @@ export default function App() {
         </div>
 
         
-<div style={{
-  position:"absolute",
-  top:60,
-  left:20,
-  color:"#fff",
-  zIndex:99999,
-  fontSize:18
-}}>
-  Players: {players.length} | Alive: {alivePlayers.length}
-</div>
 
 <svg width="100%" height={clockHeight}
           viewBox={`0 0 ${w} ${clockHeight}`}
@@ -870,7 +860,8 @@ export default function App() {
 
             const tx = cx + timeR * Math.cos(midAngle);
             const ty = cy + timeR * Math.sin(midAngle);
-            const deg = (midAngle * 180 / Math.PI) - 90;
+            let deg = (midAngle * 180 / Math.PI) + 90;
+            if (deg > 90 && deg < 270) deg += 180;
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
             const halfArc = Math.PI * 0.18;
@@ -970,8 +961,8 @@ export default function App() {
             if (!ap) return null;
             const s = sectorByOrig.get(ap.originalIdx);
             if (!s) return null;
-            const arcR = centerR - baseScale * 0.012;
-            const halfSpanRad = Math.max((s.angle2 - s.angle1) / 2, 0.12);
+            const arcR = centerR - baseScale * 0.01;
+            const halfSpanRad = (s.angle2 - s.angle1) / 2 - 0.015;
             const x1a = cx + arcR * Math.cos(-halfSpanRad);
             const y1a = cy + arcR * Math.sin(-halfSpanRad);
             const x2a = cx + arcR * Math.cos(halfSpanRad);
