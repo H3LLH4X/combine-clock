@@ -769,10 +769,10 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
+  const n = aliveCount;
   const timeR =
     centerR + (maxR - centerR) *
     (n <= 2 ? 0.42 : n <= 3 ? 0.46 : n <= 4 ? 0.50 : n <= 5 ? 0.54 : 0.58);
-  const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
   const dhappaTextLength = centerR * 1.72;
