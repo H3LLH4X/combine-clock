@@ -769,16 +769,12 @@ export default function App() {
   
   const centerR = baseScale * 0.24;
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
-  const timerRadiusFactor = Math.max(0.34, Math.min(0.50, 520 / Math.max(w, h)));
-  const timeR = centerR + (maxR - centerR) * timerRadiusFactor;
+  const timeR = centerR + (maxR - centerR) * (aliveCount <= 3 ? 0.32 : aliveCount <= 5 ? 0.38 : 0.42);
   const n = aliveCount;
   
   const dhappaFontSize = centerR * 0.58;
   const dhappaTextLength = centerR * 1.72;
-  const timerFontSize = Math.max(
-    26,
-    Math.min(Math.min(w, h) * (n <= 2 ? 0.085 : n <= 3 ? 0.075 : n <= 4 ? 0.066 : 0.058), 112)
-  );
+  const timerFontSize = Math.max(24, baseScale * (n <= 2 ? 0.16 : n <= 3 ? 0.14 : n <= 4 ? 0.12 : 0.10));
 
   return (
     <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:FONT,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
@@ -876,7 +872,7 @@ export default function App() {
             const ty = cy + timeR * Math.sin(midAngle);
             let deg = (midAngle * 180 / Math.PI) + 90;
             if (deg > 90 && deg < 270) deg += 180;
-            const dispColor = '#ffffff';
+            const dispColor = "#FFFFFF";
 
             const halfArc = Math.PI * 0.18;
             const nr = centerR + baseScale * 0.05;
@@ -938,7 +934,7 @@ export default function App() {
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
                   <text textAnchor="middle" dominantBaseline="middle"
                     fontSize={timerFontSize} fill={dispColor}
-                    stroke="#000000" strokeWidth={Math.max(2, baseScale * 0.006)}
+                    stroke={dispColor} strokeWidth={baseScale * 0.003}
                     paintOrder="stroke fill" fontFamily={FONT}>
                     {formatTime(t)}
                   </text>
