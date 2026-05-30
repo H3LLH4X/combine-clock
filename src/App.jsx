@@ -130,17 +130,35 @@ function RoundStartPopup({ roundNum, starterName, starterColor, onClose }) {
   const [r, g, b] = starterColor.match(/\w\w/g).map(x => parseInt(x, 16));
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99999,background:"rgba(5,5,8,0.93)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{background:"#0a0a14",border:`2px solid rgba(${r},${g},${b},0.4)`,borderRadius:28,padding:44,textAlign:"center",maxWidth:340,width:"90%"}}>
-        <div style={{color:"#555",fontSize:12,fontFamily:FONT,letterSpacing:5,marginBottom:10}}>GET READY</div>
-        <div style={{fontSize:52,fontFamily:FONT,letterSpacing:2,color:"#fff",marginBottom:4}}>ROUND {roundNum}</div>
-        <div style={{color:"#555",fontSize:13,fontFamily:FONT,letterSpacing:3,marginBottom:24}}>STARTS WITH</div>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:32}}>
-          <div style={{width:14,height:14,borderRadius:"50%",background:starterColor}}/>
-          <span style={{color:starterColor,fontSize:26,fontFamily:FONT}}>{starterName}</span>
+    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900}}>
+      <div style={{background:"#0a0a14",border:`1px solid ${starterColor}44`,borderRadius:28,padding:44,textAlign:"center",maxWidth:320,width:"90%"}}>
+        <div style={{color:"#555",fontSize:10,letterSpacing:5,marginBottom:16}}>GET READY</div>
+        <div style={{fontSize:52,fontWeight:900,letterSpacing:2,color:"#fff",marginBottom:4}}>R{roundNum}</div>
+        <div style={{color:"#444",fontSize:11,letterSpacing:3,marginBottom:24}}>ROUND {roundNum}</div>
+        <div style={{color:"#555",fontSize:11,letterSpacing:2,marginBottom:8}}>STARTS WITH</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:30}}>
+          <div style={{width:12,height:12,borderRadius:"50%",background:starterColor}}/>
+          <span style={{color:starterColor,fontSize:22,fontWeight:900}}>{starterName}</span>
         </div>
         <button onClick={onClose} style={{width:"100%",padding:16,borderRadius:12,background:starterColor,border:"none",color:"#000",fontFamily:FONT,fontSize:18,letterSpacing:2,cursor:"pointer"}}>
           LET'S GO →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── ROUND LOSER POPUP ──
+function RoundLoserPopup({ loser, onClose }) {
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:99998,background:"#050508dd",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+      <div style={{background:"#0a0a14",border:"1px solid #FF6B6B33",borderRadius:28,padding:40,textAlign:"center",maxWidth:300,width:"90%"}}>
+        <div style={{fontSize:40,marginBottom:12}}>💀</div>
+        <div style={{color:"#555",fontSize:10,letterSpacing:5,marginBottom:10}}>ROUND LOSER</div>
+        <div style={{color:loser.color,fontSize:28,fontWeight:900,marginBottom:6}}>{loser.name}</div>
+        <div style={{color:"#444",fontSize:11,letterSpacing:2,marginBottom:28}}>LAST ONE OUT · 0 PTS</div>
+        <button onClick={onClose} style={{width:"100%",padding:14,borderRadius:12,background:"#FF6B6B",border:"none",color:"#fff",fontFamily:"'Courier New',monospace",fontSize:14,fontWeight:900,letterSpacing:2,cursor:"pointer"}}>
+          SEE RESULTS →
         </button>
       </div>
     </div>
@@ -153,11 +171,11 @@ function GameOverPopup({ winner, cumulativeScores, players, onPlayAgain }) {
   const [r, g, b] = winner.color.match(/\w\w/g).map(x => parseInt(x, 16));
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:99999,background:"rgba(5,5,8,0.93)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:FONT}}>
-      <div style={{background:"#0a0a14",border:`2px solid rgba(${r},${g},${b},0.3)`,borderRadius:28,padding:36,textAlign:"center",maxWidth:360,width:"90%"}}>
-        <div style={{color:"#FFD93D",fontSize:13,letterSpacing:5,marginBottom:8}}>GAME OVER</div>
-        <div style={{color:winner.color,fontSize:36,marginBottom:4}}>{winner.name}</div>
-        <div style={{color:"#555",fontSize:13,letterSpacing:3,marginBottom:28}}>WINS THE GAME 🏆</div>
+    <div style={{position:"fixed",inset:0,zIndex:99999,background:"#050508ee",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Courier New',monospace"}}>
+      <div style={{background:"#0a0a14",border:`1px solid ${winner.color}44`,borderRadius:28,padding:36,textAlign:"center",maxWidth:360,width:"90%"}}>
+        <div style={{color:"#FFD93D",fontSize:11,letterSpacing:5,marginBottom:8}}>GAME OVER</div>
+        <div style={{color:winner.color,fontSize:36,fontWeight:900,marginBottom:4}}>{winner.name}</div>
+        <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:28}}>WINS THE GAME 🏆</div>
         <div style={{background:"#050508",borderRadius:14,padding:16,marginBottom:24}}>
           {sorted.map((p, i) => (
             <div key={p.name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
@@ -209,7 +227,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
   );
 
   return (
-    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:FONT,padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
       <div style={{width:"100%",maxWidth:440}}>
         <div style={{textAlign:"center",marginBottom: hasHistory ? 16 : 32}}>
           <div style={{fontSize:52,letterSpacing:4,color:"#fff"}}>DHAPPA</div>
@@ -280,6 +298,43 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             {hasHistory ? `START ROUND ${roundNum} →` : "START →"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ROUND SUMMARY SCREEN ──
+function RoundSummary({ roundResult, roundNum, cumulativeScores, players, targetScore, onContinue, gameWinner }) {
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-start",fontFamily:"'Courier New',monospace",padding:"2rem",boxSizing:"border-box",overflowY:"auto"}}>
+      <div style={{width:"100%",maxWidth:400}}>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{color:"#555",fontSize:11,letterSpacing:4,marginBottom:4}}>ROUND {roundNum} OVER</div>
+        </div>
+
+        <div style={{background:"#0a0a14",border:"1px solid #222",borderRadius:16,padding:24,marginBottom:16}}>
+          <div style={{color:"#555",fontSize:11,letterSpacing:3,marginBottom:14}}>THIS ROUND</div>
+          {roundResult.map((r, i) => (
+            <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:10,height:10,borderRadius:"50%",background:r.color,flexShrink:0}} />
+                <span style={{color:r.color,fontWeight:700,fontSize:13}}>{r.name}</span>
+                {r.dhappa && <span style={{color:"#FF6B6B",fontSize:10,letterSpacing:1,background:"#FF6B6B22",padding:"2px 6px",borderRadius:4}}>DHAPPA +{DHAPPA_POINTS}</span>}
+                {r.isLoser && <span style={{color:"#555",fontSize:10,letterSpacing:1,background:"#ffffff11",padding:"2px 6px",borderRadius:4}}>💀 LOST</span>}
+              </div>
+              <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                <span style={{color:"#555",fontSize:11}}>{r.position === 0 ? "1ST" : r.position === 1 ? "2ND" : r.position === 2 ? "3RD" : `${r.position+1}TH`}</span>
+                <span style={{color:r.earned > 0 ? r.color : "#555",fontWeight:900,fontSize:16}}>+{r.earned} pts</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Leaderboard players={players} cumulativeScores={cumulativeScores} roundNum={roundNum} targetScore={targetScore} />
+
+        <button onClick={onContinue} style={{width:"100%",padding:14,borderRadius:12,background:gameWinner?"#FFD93D":"#FF6B6B",border:"none",color:gameWinner?"#000":"#fff",fontFamily:"'Courier New',monospace",fontSize:15,fontWeight:900,letterSpacing:2,cursor:"pointer"}}>
+          {gameWinner ? `🏆 ${gameWinner.name} WINS! →` : "NEXT ROUND →"}
+        </button>
       </div>
     </div>
   );
@@ -771,19 +826,15 @@ export default function App() {
   const maxR = Math.sqrt(w * w + clockHeight * clockHeight); // Fill screen corners
   const timeR = centerR + (maxR - centerR) * (aliveCount <= 3 ? 0.32 : aliveCount <= 5 ? 0.38 : 0.42);
   const n = aliveCount;
-  
-  const dhappaFontSize = centerR * 0.58;
-  const dhappaTextLength = centerR * 1.72;
-  const timerFontSize = Math.max(24, baseScale * (n <= 2 ? 0.16 : n <= 3 ? 0.14 : n <= 4 ? 0.12 : 0.10));
+  const dhappaFontSize = centerR * 0.54;
+  const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
 
   return (
-    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:FONT,userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
+    <div className="app-container" style={{position:"fixed",inset:0,zIndex:9999,background:"#050508",fontFamily:"'Courier New',monospace",userSelect:"none",overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap');
         .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${clockHeight}px !important; }
-        .action-dashboard { position: relative !important; }
-        * { font-family: 'Impact', 'Arial Narrow', Arial, sans-serif !important; }
-        input, button { font-family: 'Impact', 'Arial Narrow', Arial, sans-serif !important; }
+        .action-dashboard { position: relative !important; height: auto !important; max-height: none !important; }
       `}</style>
 
       {showRoundStart && roundStartInfo && (
@@ -979,8 +1030,8 @@ export default function App() {
             const y2a = cy + arcR * Math.sin(halfSpanRad);
             const la = halfSpanRad * 2 > Math.PI ? 1 : 0;
             return (
-              <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${la} 1 ${x2a} ${y2a}`}
-                fill="none" stroke={ap.color} strokeWidth={baseScale * 0.018} strokeLinecap="round"
+              <path d={`M ${x1a} ${y1a} A ${arcR} ${arcR} 0 ${largeArc} 1 ${x2a} ${y2a}`}
+                fill="none" stroke={activePlayer.color} strokeWidth={baseScale * 0.018} strokeLinecap="butt"
                 style={{transformOrigin:`${cx}px ${cy}px`,transform:`rotate(${turnIndicatorRotation}deg)`,transition:"transform .35s linear"}}
               />
             );
@@ -988,13 +1039,13 @@ export default function App() {
 
           {/* DHAPPA label */}
           <text x={cx} y={cy - dhappaFontSize * 0.08} textAnchor="middle" dominantBaseline="middle"
-            fontSize={dhappaFontSize} textLength={dhappaTextLength} lengthAdjust="spacingAndGlyphs"
+            fontSize={dhappaFontSize} fontWeight={900}
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
             stroke={centerHovered ? "#ff9999" : "#FF6B6B"} strokeWidth={baseScale * 0.003}
             paintOrder="stroke fill" fontFamily={FONT}
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
-            style={{cursor:"pointer",transition:"fill .15s"}}>
+            style={{cursor:"pointer",letterSpacing:1,transition:"fill .15s"}}>
             DHAPPA
           </text>
           <text x={cx} y={cy + dhappaFontSize * 0.68} textAnchor="middle" dominantBaseline="middle"
