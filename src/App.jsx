@@ -6,6 +6,7 @@ const VDARK =  ["#3a0000", "#3a2800", "#003a10", "#00103a", "#1a003a", "#3a1500"
 
 const KICK_POINTS = 3;
 const I_WON_POINTS = [5, 3, 2, 1, 1];
+const KICK_SOUND_URL = new URL("../sfx/dragon-studio-gunshot-511311.mp3", import.meta.url).href;
 
 function formatTime(s) {
   const m = Math.floor(s / 60);
@@ -65,6 +66,14 @@ function playTick(isLast = false) {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.12);
+  } catch (e) {}
+}
+
+function playKickSound() {
+  try {
+    const audio = new Audio(KICK_SOUND_URL);
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   } catch (e) {}
 }
 
@@ -783,6 +792,8 @@ export default function App() {
   }, [targetScore]);
 
   const kickPlayer = useCallback((globalIdx, reason = "kicked") => {
+    if (reason === "kicked") playKickSound();
+
     setPlayers(prev => {
       const next = prev.map((p, i) => i === globalIdx ? { ...p, alive: false } : p);
       const stillAlive = next.filter(p => p.alive);
