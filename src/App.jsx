@@ -961,6 +961,11 @@ export default function App() {
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>← SETUP</button>
             <button onClick={resetGame} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#FF6B6B", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>RESET</button>
+            <button onClick={() => { if (!started) { setStarted(true); setPaused(false); return; } setPaused(p => !p); }}
+              disabled={!!winner}
+              style={{ background: paused ? "#FFD93D22" : "#05050899", border: `2px solid ${paused ? "#FFD93D" : "#333"}`, borderRadius: 8, color: paused ? "#FFD93D" : "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: winner ? "not-allowed" : "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>
+              {!started ? "START" : paused ? "GO" : "PAUSE"}
+            </button>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <div style={{ color: "#444", fontSize: 13, fontWeight: 900, letterSpacing: 2 }}>R{roundNum - 1}</div>
@@ -1011,7 +1016,8 @@ export default function App() {
             const t = times[globalIdx];
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
-            const nameR = centerR + baseScale * 0.05;
+            const nameFontSize = baseScale * 0.034;
+            const nameR = centerR + nameFontSize * 0.38;
             const nameInset = Math.min((angle2 - angle1) * 0.18, 0.18);
             const nameStartAngle = angle1 + nameInset;
             const nameEndAngle = angle2 - nameInset;
@@ -1042,7 +1048,7 @@ export default function App() {
                   <path id={namePathId} d={`M ${nameStartX} ${nameStartY} A ${nameR} ${nameR} 0 ${nameLargeArc} 1 ${nameEndX} ${nameEndY}`} fill="none" />
                 </defs>
                 <text fontFamily="Impact, sans-serif"
-                  fontSize={baseScale * 0.034}
+                  fontSize={nameFontSize}
                   fontWeight={900}
                   fill="#000000"
                   stroke="rgba(255,255,255,0.24)"
@@ -1172,40 +1178,6 @@ export default function App() {
           </div>
         )}
 
-      </div>
-
-      <div className="action-dashboard" style={{ position: "relative", background: "#050508", borderTop: "1px solid #111", overflow: "visible", paddingBottom: 24 }}>
-        <div style={{ display: "flex", gap: 12, padding: "14px 20px 12px", boxSizing: "border-box" }}>
-          <button onClick={() => {
-            if (!started) { setStarted(true); setPaused(false); return; }
-            passToNext(curGlobalIdx);
-          }} disabled={!!winner}
-            style={{ flex: 2, padding: "18px 0", borderRadius: 14, background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22", border: `3px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`, color: players[curGlobalIdx]?.color ?? '#FF6B6B', fontFamily: "Impact, sans-serif", fontSize: 19, fontWeight: 900, cursor: "pointer", letterSpacing: 2 }}>
-            {started ? "PASS →" : "START / PASS →"}
-          </button>
-          <button onClick={() => { if (started) setPaused(p => !p); }}
-            disabled={!started || !!winner}
-            style={{ flex: 1, padding: "18px 0", borderRadius: 14, background: paused ? "#FFD93D22" : "#0a0a14", border: `3px solid ${paused ? "#FFD93D" : "#222"}`, color: paused ? "#FFD93D" : "#555", fontFamily: "Impact, sans-serif", fontSize: 17, fontWeight: 900, cursor: "pointer", letterSpacing: 1 }}>
-            {paused ? "▶ GO" : "⏸ PAUSE"}
-          </button>
-        </div>
-
-        {roundEvents.length > 0 && (
-          <div style={{ padding: "0 16px" }}>
-            <RoundProgress events={roundEvents} players={players} />
-          </div>
-        )}
-
-        {allPlayers.length > 0 && (
-          <div style={{ padding: "0 16px 16px" }}>
-            <Leaderboard
-              players={allPlayers}
-              cumulativeScores={cumulativeScores}
-              roundNum={roundNum - 1}
-              targetScore={targetScore}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
