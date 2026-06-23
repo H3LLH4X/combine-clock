@@ -273,7 +273,7 @@ function GameOverScreen({ winner, cumulativeScores, players, onPlayAgain, target
   );
 }
 
-function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange }) {
+function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange, turnDirection, onTurnDirectionChange }) {
   const [n, setN] = useState(existingPlayers?.length || 3);
   const [mins, setMins] = useState(2);
   
@@ -337,12 +337,30 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             <input type="number" min={1} max={60} value={mins} onChange={e => setMins(Number(e.target.value))} style={{ width: "100%", background: "#050508", border: "1px solid #222", borderRadius: 8, padding: "10px 14px", color: "#fff", fontFamily: "Impact, sans-serif", fontSize: 18, outline: "none", boxSizing: "border-box" }} />
           </div>
 
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>TIMER ROTATION</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                ["counterclockwise", "COUNTERCLOCKWISE"],
+                ["clockwise", "CLOCKWISE"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => onTurnDirectionChange(value)}
+                  style={{ flex: 1, padding: "12px 6px", borderRadius: 10, border: turnDirection === value ? "2px solid #4D96FF" : "1px solid #222", background: turnDirection === value ? "#4D96FF22" : "#050508", color: turnDirection === value ? "#4D96FF" : "#444", fontFamily: "Impact, sans-serif", fontSize: 12, fontWeight: 900, cursor: "pointer", letterSpacing: 0 }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div style={{ marginBottom: 24, textAlign: "center" }}>
             <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 16, textAlign: "left" }}>PLAYER NAMES (SETUP DIAL)</div>
             <div style={{ position: "relative", width: "320px", height: "320px", margin: "0 auto", background: "#050508", borderRadius: "50%", border: "1px dashed #222" }}>
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", color: "#111", fontSize: 14, pointerEvents: "none", letterSpacing: 2 }}>CLOCK DIAL</div>
               {Array.from({ length: n }, (_, i) => {
-                const angle = -Math.PI / 4 - (2 * Math.PI * i) / n;
+                const angle = -Math.PI / 2 + (2 * Math.PI * (i + 0.5)) / n;
                 const r = 100;
                 const cx = 160;
                 const cy = 160;
@@ -454,6 +472,7 @@ export default function App() {
 
   const [roundNum, setRoundNum] = useState(1);
   const [targetScore, setTargetScore] = useState(11);
+  const [turnDirection, setTurnDirection] = useState("counterclockwise");
   const [cumulativeScores, setCumulativeScores] = useState({});
   const [allPlayers, setAllPlayers] = useState([]);
   const [roundEvents, setRoundEvents] = useState([]);
@@ -540,9 +559,9 @@ export default function App() {
     setRoundStartInfo({ roundNum: nextRoundNum, starterName: names[startPlayerIdx], starterColor: COLORS[startPlayerIdx], startPlayerIdx });
     setShowRoundStart(true);
 
-    setConfig({ n, secs, names });
+    setConfig({ n, secs, names, turnDirection });
     setScreen("game");
-  }, [roundNum, allPlayers]);
+  }, [roundNum, allPlayers, turnDirection]);
 
   const handleRoundStartClose = useCallback(() => {
     setShowRoundStart(false);
@@ -608,12 +627,14 @@ export default function App() {
     const current = turnIndicatorRotationRef.current;
     const normalizedCurrent = ((current % 360) + 360) % 360;
     const normalizedTarget = ((activeSectorMidDeg % 360) + 360) % 360;
+    const clockwiseDelta = (normalizedTarget - normalizedCurrent + 360) % 360;
     const counterDelta = -((normalizedCurrent - normalizedTarget + 360) % 360);
-    if (Math.abs(counterDelta) < 0.001) return;
+    const delta = turnDirection === "clockwise" ? clockwiseDelta : counterDelta;
+    if (Math.abs(delta) < 0.001) return;
 
-    turnIndicatorRotationRef.current = current + counterDelta;
+    turnIndicatorRotationRef.current = current + delta;
     setTurnIndicatorRotation(turnIndicatorRotationRef.current);
-  }, [activeSectorMidDeg]);
+  }, [activeSectorMidDeg, turnDirection]);
 
   useEffect(() => {
     if (!started || !players.length) return;
@@ -626,9 +647,10 @@ export default function App() {
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
     const curPos = alive.indexOf(fromGlobal ?? curGlobalIdx);
-    const nextPos = (curPos - 1 + alive.length) % alive.length;
+    const step = turnDirection === "clockwise" ? 1 : -1;
+    const nextPos = (curPos + step + alive.length) % alive.length;
     setActiveIdx(nextPos);
-  }, [started, paused, winner, popup, players, curGlobalIdx]);
+  }, [started, paused, winner, popup, players, curGlobalIdx, turnDirection]);
 
   const resetGame = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -647,6 +669,7 @@ export default function App() {
     setRoundResult(null);
     setRoundNum(1);
     setTargetScore(11);
+    setTurnDirection("counterclockwise");
     setCumulativeScores({});
     setAllPlayers([]);
     setRoundEvents([]);
