@@ -1011,16 +1011,10 @@ export default function App() {
             const t = times[globalIdx];
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
-            const halfArc = Math.PI * 0.18;
-            const arcMid = midAngle;
-            const arcA1 = arcMid - halfArc;
-            const arcA2 = arcMid + halfArc;
-            const nr = centerR + baseScale * 0.008;
-            const sx = cx + nr * Math.cos(arcA1);
-            const sy = cy + nr * Math.sin(arcA1);
-            const ex = cx + nr * Math.cos(arcA2);
-            const ey = cy + nr * Math.sin(arcA2);
-            const namePathId = `namepath-${origIdx}`;
+            const nameR = centerR + baseScale * 0.06;
+            const nameX = cx + nameR * Math.cos(midAngle);
+            const nameY = cy + nameR * Math.sin(midAngle);
+            const nameRotation = midAngle * 180 / Math.PI;
 
             return (
               <g key={globalIdx} onClick={() => {
@@ -1038,13 +1032,18 @@ export default function App() {
                   strokeWidth={isActive ? 2 : 1}
                   style={{ transition: "fill .3s,stroke .3s" }}
                 />
-                <defs>
-                  <path id={namePathId} d={`M ${sx} ${sy} A ${nr} ${nr} 0 0 1 ${ex} ${ey}`} fill="none" />
-                </defs>
-                <text fontFamily="Impact, sans-serif" fontSize={baseScale * 0.024} fontWeight={700} fill="#000000" style={{ letterSpacing: "1px" }}>
-                  <textPath href={`#${namePathId}`} startOffset="50%" textAnchor="middle">
-                    {player.name.toUpperCase()}
-                  </textPath>
+                <text x={nameX} y={nameY}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontFamily="Impact, sans-serif"
+                  fontSize={baseScale * 0.034}
+                  fontWeight={900}
+                  fill="#000000"
+                  stroke="rgba(255,255,255,0.22)"
+                  strokeWidth={baseScale * 0.003}
+                  paintOrder="stroke fill"
+                  transform={`rotate(${nameRotation} ${nameX} ${nameY})`}
+                  style={{ letterSpacing: "1px" }}>
+                  {player.name.toUpperCase()}
                 </text>
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
                   <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="Impact, sans-serif" style={{ letterSpacing: 1 }}>
