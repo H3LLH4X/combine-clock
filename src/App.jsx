@@ -273,7 +273,7 @@ function GameOverScreen({ winner, cumulativeScores, players, onPlayAgain, target
   );
 }
 
-function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange, turnDirection, onTurnDirectionChange }) {
+function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange }) {
   const [n, setN] = useState(existingPlayers?.length || 3);
   const [mins, setMins] = useState(2);
   
@@ -335,24 +335,6 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
           <div style={{ marginBottom: 20 }}>
             <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>MINUTES PER PLAYER</div>
             <input type="number" min={1} max={60} value={mins} onChange={e => setMins(Number(e.target.value))} style={{ width: "100%", background: "#050508", border: "1px solid #222", borderRadius: 8, padding: "10px 14px", color: "#fff", fontFamily: "Impact, sans-serif", fontSize: 18, outline: "none", boxSizing: "border-box" }} />
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>TIMER ROTATION</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
-                ["counterclockwise", "COUNTERCLOCKWISE"],
-                ["clockwise", "CLOCKWISE"],
-              ].map(([value, label]) => (
-                <button
-                  key={value}
-                  onClick={() => onTurnDirectionChange(value)}
-                  style={{ flex: 1, padding: "12px 6px", borderRadius: 10, border: turnDirection === value ? "2px solid #4D96FF" : "1px solid #222", background: turnDirection === value ? "#4D96FF22" : "#050508", color: turnDirection === value ? "#4D96FF" : "#444", fontFamily: "Impact, sans-serif", fontSize: 12, fontWeight: 900, cursor: "pointer", letterSpacing: 0 }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div style={{ marginBottom: 24, textAlign: "center" }}>
