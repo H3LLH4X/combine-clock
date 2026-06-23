@@ -6,7 +6,6 @@ const VDARK =  ["#3a0000", "#3a2800", "#003a10", "#00103a", "#1a003a", "#3a1500"
 
 const KICK_POINTS = 3;
 const I_WON_POINTS = [5, 3, 2, 1, 1];
-const KICK_SOUND_URL = new URL("../sfx/dragon-studio-gunshot-511311.mp3", import.meta.url).href;
 
 function formatTime(s) {
   const m = Math.floor(s / 60);
@@ -66,14 +65,6 @@ function playTick(isLast = false) {
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.12);
-  } catch (e) {}
-}
-
-function playKickSound() {
-  try {
-    const audio = new Audio(KICK_SOUND_URL);
-    audio.currentTime = 0;
-    audio.play().catch(() => {});
   } catch (e) {}
 }
 
@@ -282,7 +273,7 @@ function GameOverScreen({ winner, cumulativeScores, players, onPlayAgain, target
   );
 }
 
-function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange, direction, onDirectionChange }) {
+function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange }) {
   const [n, setN] = useState(existingPlayers?.length || 3);
   const [mins, setMins] = useState(2);
   
@@ -347,70 +338,11 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
           </div>
 
           <div style={{ marginBottom: 24, textAlign: "center" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div style={{ color: "#555", fontSize: 11, letterSpacing: 3 }}>PLAYER NAMES (SETUP DIAL)</div>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-              <button onClick={() => onDirectionChange(-1)} type="button"
-                style={{
-                  flex: 1, padding: "10px 0", borderRadius: 10,
-                  background: direction === -1 ? "#4D96FF22" : "#050508",
-                  border: `2px solid ${direction === -1 ? "#4D96FF" : "#222"}`,
-                  color: direction === -1 ? "#4D96FF" : "#444",
-                  fontFamily: "Impact, sans-serif", fontSize: 12, fontWeight: 900,
-                  cursor: "pointer", letterSpacing: 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  transition: "all .15s"
-                }}>
-                <span style={{ fontSize: 14 }}>↺</span> ANTI-CLOCKWISE
-              </button>
-              <button onClick={() => onDirectionChange(1)} type="button"
-                style={{
-                  flex: 1, padding: "10px 0", borderRadius: 10,
-                  background: direction === 1 ? "#4D96FF22" : "#050508",
-                  border: `2px solid ${direction === 1 ? "#4D96FF" : "#222"}`,
-                  color: direction === 1 ? "#4D96FF" : "#444",
-                  fontFamily: "Impact, sans-serif", fontSize: 12, fontWeight: 900,
-                  cursor: "pointer", letterSpacing: 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  transition: "all .15s"
-                }}>
-                CLOCKWISE <span style={{ fontSize: 14 }}>↻</span>
-              </button>
-            </div>
-
+            <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 16, textAlign: "left" }}>PLAYER NAMES (SETUP DIAL)</div>
             <div style={{ position: "relative", width: "320px", height: "320px", margin: "0 auto", background: "#050508", borderRadius: "50%", border: "1px dashed #222" }}>
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", color: "#111", fontSize: 14, pointerEvents: "none", letterSpacing: 2 }}>CLOCK DIAL</div>
-
-              <svg width="320" height="320" style={{ position: "absolute", top: 0, left: 0, pointerEvents: "none" }} viewBox="0 0 320 320">
-                {(() => {
-                  const cx = 160, cy = 160, r = 56;
-                  const sweep = direction === 1 ? 250 : -250;
-                  const startA = -Math.PI / 2;
-                  const endA = startA + (sweep * Math.PI / 180);
-                  const x1 = cx + r * Math.cos(startA), y1 = cy + r * Math.sin(startA);
-                  const x2 = cx + r * Math.cos(endA), y2 = cy + r * Math.sin(endA);
-                  const largeArc = Math.abs(sweep) > 180 ? 1 : 0;
-                  const sweepFlag = sweep > 0 ? 1 : 0;
-                  const headLen = 10;
-                  const tangentA = endA + (sweep > 0 ? Math.PI / 2 : -Math.PI / 2);
-                  const hx1 = x2 + headLen * Math.cos(tangentA + 2.5);
-                  const hy1 = y2 + headLen * Math.sin(tangentA + 2.5);
-                  const hx2 = x2 + headLen * Math.cos(tangentA - 2.5);
-                  const hy2 = y2 + headLen * Math.sin(tangentA - 2.5);
-                  return (
-                    <g>
-                      <path d={`M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`}
-                        fill="none" stroke="#4D96FF" strokeWidth={3} strokeLinecap="round" opacity={0.6} />
-                      <polygon points={`${x2},${y2} ${hx1},${hy1} ${hx2},${hy2}`} fill="#4D96FF" opacity={0.8} />
-                    </g>
-                  );
-                })()}
-              </svg>
-
               {Array.from({ length: n }, (_, i) => {
-                const angle = -Math.PI / 2 + (2 * Math.PI * (i + 0.5)) / n;
+                const angle = -Math.PI / 4 - (2 * Math.PI * i) / n;
                 const r = 100;
                 const cx = 160;
                 const cy = 160;
@@ -501,7 +433,6 @@ export default function App() {
   const [config, setConfig] = useState(null);
   const [players, setPlayers] = useState([]);
   const [activeIdx, setActiveIdx] = useState(0);
-  const [direction, setDirection] = useState(-1); // -1 = counterclockwise (default), 1 = clockwise
   const [times, setTimes] = useState([]);
   const [paused, setPaused] = useState(true);
   const [started, setStarted] = useState(false);
@@ -677,14 +608,12 @@ export default function App() {
     const current = turnIndicatorRotationRef.current;
     const normalizedCurrent = ((current % 360) + 360) % 360;
     const normalizedTarget = ((activeSectorMidDeg % 360) + 360) % 360;
-    const delta = direction === 1
-      ? ((normalizedTarget - normalizedCurrent + 360) % 360)
-      : -((normalizedCurrent - normalizedTarget + 360) % 360);
-    if (Math.abs(delta) < 0.001) return;
+    const counterDelta = -((normalizedCurrent - normalizedTarget + 360) % 360);
+    if (Math.abs(counterDelta) < 0.001) return;
 
-    turnIndicatorRotationRef.current = current + delta;
+    turnIndicatorRotationRef.current = current + counterDelta;
     setTurnIndicatorRotation(turnIndicatorRotationRef.current);
-  }, [activeSectorMidDeg, direction]);
+  }, [activeSectorMidDeg]);
 
   useEffect(() => {
     if (!started || !players.length) return;
@@ -697,9 +626,9 @@ export default function App() {
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
     const curPos = alive.indexOf(fromGlobal ?? curGlobalIdx);
-    const nextPos = (curPos + direction + alive.length) % alive.length;
+    const nextPos = (curPos - 1 + alive.length) % alive.length;
     setActiveIdx(nextPos);
-  }, [started, paused, winner, popup, players, curGlobalIdx, direction]);
+  }, [started, paused, winner, popup, players, curGlobalIdx]);
 
   const resetGame = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -707,7 +636,6 @@ export default function App() {
     setConfig(null);
     setPlayers([]);
     setActiveIdx(0);
-    setDirection(-1);
     setTimes([]);
     setPaused(true);
     setStarted(false);
@@ -792,8 +720,6 @@ export default function App() {
   }, [targetScore]);
 
   const kickPlayer = useCallback((globalIdx, reason = "kicked") => {
-    if (reason === "kicked") playKickSound();
-
     setPlayers(prev => {
       const next = prev.map((p, i) => i === globalIdx ? { ...p, alive: false } : p);
       const stillAlive = next.filter(p => p.alive);
@@ -951,8 +877,6 @@ export default function App() {
         roundNum={roundNum}
         targetScore={targetScore}
         onTargetChange={setTargetScore}
-        direction={direction}
-        onDirectionChange={setDirection}
       />
     );
   }
@@ -1256,35 +1180,6 @@ export default function App() {
             disabled={!started || !!winner}
             style={{ flex: 1, padding: "18px 0", borderRadius: 14, background: paused ? "#FFD93D22" : "#0a0a14", border: `3px solid ${paused ? "#FFD93D" : "#222"}`, color: paused ? "#FFD93D" : "#555", fontFamily: "Impact, sans-serif", fontSize: 17, fontWeight: 900, cursor: "pointer", letterSpacing: 1 }}>
             {paused ? "▶ GO" : "⏸ PAUSE"}
-          </button>
-        </div>
-
-        <div style={{ display: "flex", gap: 12, padding: "0 20px 12px", boxSizing: "border-box" }}>
-          <button onClick={() => setDirection(-1)} disabled={!!winner}
-            style={{
-              flex: 1, padding: "12px 0", borderRadius: 12,
-              background: direction === -1 ? "#4D96FF22" : "#0a0a14",
-              border: `2px solid ${direction === -1 ? "#4D96FF" : "#222"}`,
-              color: direction === -1 ? "#4D96FF" : "#555",
-              fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900,
-              cursor: "pointer", letterSpacing: 1,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              transition: "background .15s, border-color .15s, color .15s"
-            }}>
-            <span style={{ fontSize: 16 }}>↺</span> ANTI-CLOCKWISE
-          </button>
-          <button onClick={() => setDirection(1)} disabled={!!winner}
-            style={{
-              flex: 1, padding: "12px 0", borderRadius: 12,
-              background: direction === 1 ? "#4D96FF22" : "#0a0a14",
-              border: `2px solid ${direction === 1 ? "#4D96FF" : "#222"}`,
-              color: direction === 1 ? "#4D96FF" : "#555",
-              fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900,
-              cursor: "pointer", letterSpacing: 1,
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              transition: "background .15s, border-color .15s, color .15s"
-            }}>
-            CLOCKWISE <span style={{ fontSize: 16 }}>↻</span>
           </button>
         </div>
 
