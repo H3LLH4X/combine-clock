@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap');`;
+
 const COLORS = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#C77DFF", "#FF9F1C"];
 const DARK =   ["#cc2222", "#cc9900", "#1e8c3a", "#1155cc", "#7722cc", "#cc5500"];
 const VDARK =  ["#3a0000", "#3a2800", "#003a10", "#00103a", "#1a003a", "#3a1500"];
@@ -159,7 +161,7 @@ function RoundStartPopup({ roundNum, starterName, starterColor, onClose }) {
           ROUND {roundNum},<br />
           START WITH <span style={{ color: starterColor }}>{starterName}</span>.
         </div>
-        <button onClick={onClose} style={{ width: "100%", padding: 14, borderRadius: 12, background: starterColor, border: "none", color: "#000", fontFamily: "Impact, sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: 2, cursor: "pointer", WebkitTextStroke: "0" }}>
+        <button onClick={onClose} style={{ width: "100%", padding: 14, borderRadius: 12, background: starterColor, border: "none", color: "#000", fontFamily: "'Doto', sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: 2, cursor: "pointer", WebkitTextStroke: "0" }}>
           LET'S GO →
         </button>
       </div>
@@ -181,7 +183,7 @@ function GameOverScreen({ winner, cumulativeScores, players, onPlayAgain, target
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      fontFamily: "Impact, sans-serif",
+      fontFamily: "'Doto', sans-serif",
       fontWeight: 900,
       padding: "2rem",
       boxSizing: "border-box",
@@ -256,7 +258,7 @@ function GameOverScreen({ winner, cumulativeScores, players, onPlayAgain, target
             background: "#fff", 
             border: "none", 
             color: "#000", 
-            fontFamily: "Impact, sans-serif", 
+            fontFamily: "'Doto', sans-serif", 
             fontSize: 18, 
             fontWeight: 900, 
             letterSpacing: 3, 
@@ -303,7 +305,7 @@ function MatrixRain() {
       drops.forEach((y, i) => {
         const char = chars[Math.floor(Math.random() * chars.length)];
         ctx.fillStyle = i % 5 === 0 ? "#FF6B6B" : "#3a0010";
-        ctx.font = `${fontSize}px Impact`;
+        ctx.font = `${fontSize}px 'Doto'`;
         ctx.fillText(char, i * fontSize, y * fontSize);
         if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
@@ -346,7 +348,8 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
   const hasHistory = existingPlayers?.length > 0 && roundNum > 1;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", fontFamily: "Impact, sans-serif", fontWeight: 900, boxSizing: "border-box" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", fontFamily: "'Doto', sans-serif", fontWeight: 900, boxSizing: "border-box" }}>
+      <style>{FONT_IMPORT}</style>
       <MatrixRain />
       <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 1, padding: "2rem", boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
         <div style={{ textAlign: "center", marginBottom: hasHistory ? 16 : 32 }}>
@@ -371,7 +374,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
                 <input
                   type="number" min={1} value={targetScore}
                   onChange={e => onTargetChange(Number(e.target.value))}
-                  style={{ width: 60, background: "#050508", border: "1px solid #333", borderRadius: 6, padding: "6px 10px", color: "#FFD93D", fontFamily: "Impact, sans-serif", fontSize: 16, fontWeight: 900, outline: "none", textAlign: "center" }}
+                  style={{ width: 60, background: "#050508", border: "1px solid #333", borderRadius: 6, padding: "6px 10px", color: "#FFD93D", fontFamily: "'Doto', sans-serif", fontSize: 16, fontWeight: 900, outline: "none", textAlign: "center" }}
                 />
                 <span style={{ color: "#333", fontSize: 11 }}>pts</span>
               </div>
@@ -382,32 +385,51 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>PLAYERS</div>
             <div style={{ display: "flex", gap: 8 }}>
               {[2, 3, 4, 5, 6].map(v => (
-                <button key={v} onClick={() => setN(v)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: n === v ? `2px solid ${COLORS[v - 2]}` : "1px solid #222", background: n === v ? `${COLORS[v - 2]}22` : "#050508", color: n === v ? COLORS[v - 2] : "#444", fontFamily: "Impact, sans-serif", fontSize: 15, fontWeight: 900, cursor: "pointer", transition: "all .15s" }}>{v}</button>
+                <button key={v} onClick={() => setN(v)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: n === v ? `2px solid ${COLORS[v - 2]}` : "1px solid #222", background: n === v ? `${COLORS[v - 2]}22` : "#050508", color: n === v ? COLORS[v - 2] : "#444", fontFamily: "'Doto', sans-serif", fontSize: 15, fontWeight: 900, cursor: "pointer", transition: "all .15s" }}>{v}</button>
               ))}
             </div>
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 10 }}>MINUTES PER PLAYER</div>
-            <input type="number" min={1} max={60} value={mins} onChange={e => setMins(Number(e.target.value))} style={{ width: "100%", background: "#050508", border: "1px solid #222", borderRadius: 8, padding: "10px 14px", color: "#fff", fontFamily: "Impact, sans-serif", fontSize: 18, outline: "none", boxSizing: "border-box" }} />
+            <input type="number" min={1} max={60} value={mins} onChange={e => setMins(Number(e.target.value))} style={{ width: "100%", background: "#050508", border: "1px solid #222", borderRadius: 8, padding: "10px 14px", color: "#fff", fontFamily: "'Doto', sans-serif", fontSize: 18, outline: "none", boxSizing: "border-box" }} />
           </div>
 
           <div style={{ marginBottom: 24, textAlign: "center" }}>
             <div style={{ color: "#555", fontSize: 11, letterSpacing: 3, marginBottom: 16, textAlign: "left" }}>PLAYER NAMES (SETUP DIAL)</div>
-            <div style={{ position: "relative", width: "320px", height: "320px", margin: "0 auto", background: "#050508", borderRadius: "50%", border: "1px dashed #222" }}>
-              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", color: "#111", fontSize: 14, pointerEvents: "none", letterSpacing: 2 }}>CLOCK DIAL</div>
+            <div style={{ position: "relative", width: "320px", height: "320px", margin: "0 auto" }}>
+              {/* SVG pie preview behind the inputs */}
+              <svg width="320" height="320" viewBox="0 0 320 320" style={{ position: "absolute", inset: 0 }}>
+                {Array.from({ length: n }, (_, i) => {
+                  const twoPi = Math.PI * 2;
+                  const sliceAngle = twoPi / n;
+                  const a1 = -Math.PI / 2 + sliceAngle * i;
+                  const a2 = a1 + sliceAngle;
+                  const svgCx = 160, svgCy = 160;
+                  const outerR = 155, innerR = 48;
+                  const x1o = svgCx + outerR * Math.cos(a1), y1o = svgCy + outerR * Math.sin(a1);
+                  const x2o = svgCx + outerR * Math.cos(a2), y2o = svgCy + outerR * Math.sin(a2);
+                  const x1i = svgCx + innerR * Math.cos(a1), y1i = svgCy + innerR * Math.sin(a1);
+                  const x2i = svgCx + innerR * Math.cos(a2), y2i = svgCy + innerR * Math.sin(a2);
+                  const large = sliceAngle > Math.PI ? 1 : 0;
+                  const d = `M ${x1i} ${y1i} L ${x1o} ${y1o} A ${outerR} ${outerR} 0 ${large} 1 ${x2o} ${y2o} L ${x2i} ${y2i} A ${innerR} ${innerR} 0 ${large} 0 ${x1i} ${y1i} Z`;
+                  return <path key={i} d={d} fill={`${COLORS[i]}22`} stroke={`${COLORS[i]}55`} strokeWidth={1} />;
+                })}
+                <circle cx="160" cy="160" r="48" fill="#050508" stroke="#1a1a2e" strokeWidth={1} />
+                <text x="160" y="160" textAnchor="middle" dominantBaseline="middle" fill="#222" fontSize="11" fontFamily="'Doto', sans-serif" letterSpacing="2">DHAPPA</text>
+              </svg>
+
+              {/* Name inputs positioned in each sector */}
               {Array.from({ length: n }, (_, i) => {
                 const angle = -Math.PI / 2 + (2 * Math.PI * (i + 0.5)) / n;
-                const r = 100;
-                const cx = 160;
-                const cy = 160;
-                const x = cx + r * Math.cos(angle);
-                const y = cy + r * Math.sin(angle);
+                const r = 105;
+                const x = 160 + r * Math.cos(angle);
+                const y = 160 + r * Math.sin(angle);
 
                 return (
-                  <div key={i} style={{ position: "absolute", left: `${x}px`, top: `${y}px`, transform: "translate(-50%, -50%)", zIndex: 10, width: "115px" }}>
+                  <div key={i} style={{ position: "absolute", left: `${x}px`, top: `${y}px`, transform: "translate(-50%, -50%)", zIndex: 10, width: "90px" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
-                      <span style={{ fontSize: "9px", color: COLORS[i], textShadow: "0 0 4px #000" }}>P{i + 1}</span>
+                      <span style={{ fontSize: "9px", color: COLORS[i], textShadow: "0 0 4px #000", fontFamily: "'Doto', monospace" }}>P{i + 1}</span>
                       <input
                         value={names[i] ?? `Player ${i + 1}`}
                         onChange={e => {
@@ -418,7 +440,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
                             return updated;
                           });
                         }}
-                        style={{ width: "100%", background: "#0a0a14", border: `1px solid ${COLORS[i]}55`, borderLeft: `3px solid ${COLORS[i]}`, borderRadius: 4, padding: "4px 6px", color: COLORS[i], fontFamily: "Impact, sans-serif", fontSize: "11px", outline: "none", textAlign: "center", boxSizing: "border-box" }}
+                        style={{ width: "100%", background: "rgba(10,10,20,0.55)", border: `1px solid ${COLORS[i]}55`, borderLeft: `3px solid ${COLORS[i]}`, borderRadius: 4, padding: "4px 6px", color: COLORS[i], fontFamily: "'Doto', monospace", fontSize: "11px", outline: "none", textAlign: "center", boxSizing: "border-box", backdropFilter: "blur(4px)" }}
                       />
                     </div>
                   </div>
@@ -428,7 +450,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
           </div>
 
           <button onClick={() => onStart({ n, secs: mins * 60, names: names.slice(0, n) })}
-            style={{ width: "100%", padding: 14, borderRadius: 12, background: "#FF6B6B", border: "none", color: "#fff", fontFamily: "Impact, sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: 2, cursor: "pointer" }}>
+            style={{ width: "100%", padding: 14, borderRadius: 12, background: "#FF6B6B", border: "none", color: "#fff", fontFamily: "'Doto', sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: 2, cursor: "pointer" }}>
             {hasHistory ? `START ROUND ${roundNum} →` : "START →"}
           </button>
         </div>
@@ -439,7 +461,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
 
 function RoundSummary({ roundResult, roundNum, cumulativeScores, players, targetScore, onContinue }) {
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Impact, sans-serif", fontWeight: 900, padding: "2rem", boxSizing: "border-box", overflowY: "auto" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "'Doto', sans-serif", fontWeight: 900, padding: "2rem", boxSizing: "border-box", overflowY: "auto" }}>
       <div style={{ width: "100%", maxWidth: 520, textAlign: "center" }}>
         
         <div style={{ marginBottom: 30 }}>
@@ -466,7 +488,7 @@ function RoundSummary({ roundResult, roundNum, cumulativeScores, players, target
             background: "#FF6B6B", 
             border: "none", 
             color: "#fff", 
-            fontFamily: "Impact, sans-serif", 
+            fontFamily: "'Doto', sans-serif", 
             fontSize: 18, 
             fontWeight: 900, 
             letterSpacing: 3, 
@@ -993,12 +1015,12 @@ export default function App() {
   const timerFontSize = baseScale * (n <= 2 ? 0.21 : n <= 3 ? 0.165 : n <= 4 ? 0.14 : 0.112);
 
   return (
-    <div className="app-container" style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", fontFamily: "Impact, sans-serif", fontWeight: 900, userSelect: "none", overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
+    <div className="app-container" style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", fontFamily: "'Doto', sans-serif", fontWeight: 900, userSelect: "none", overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
       <style>{`
-
+        ${FONT_IMPORT}
         .clock-view-wrapper { position: relative !important; width: 100% !important; height: ${clockHeight}px !important; }
         .action-dashboard { position: relative !important; height: auto !important; max-height: none !important; }
-        .app-container, .app-container * { font-weight: 900 !important; }
+        .app-container, .app-container * { font-family: 'Doto', sans-serif !important; font-weight: 900 !important; }
         .app-container text { font-weight: 900 !important; }
         .app-container, .app-container *:not(input):not(svg):not(circle):not(path):not(line):not(rect):not(textPath) {
           -webkit-text-stroke: 2.5px rgba(0,0,0,0.85);
@@ -1019,11 +1041,11 @@ export default function App() {
         
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 20, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", boxSizing: "border-box" }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>← SETUP</button>
-            <button onClick={resetGame} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#FF6B6B", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>RESET</button>
+            <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#777", padding: "9px 16px", fontFamily: "'Doto', sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>← SETUP</button>
+            <button onClick={resetGame} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#FF6B6B", padding: "9px 16px", fontFamily: "'Doto', sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>RESET</button>
             <button onClick={() => { if (!started) { setStarted(true); setPaused(false); return; } setPaused(p => !p); }}
               disabled={!!winner}
-              style={{ background: paused ? "#FFD93D22" : "#05050899", border: `2px solid ${paused ? "#FFD93D" : "#333"}`, borderRadius: 8, color: paused ? "#FFD93D" : "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: winner ? "not-allowed" : "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>
+              style={{ background: paused ? "#FFD93D22" : "#05050899", border: `2px solid ${paused ? "#FFD93D" : "#333"}`, borderRadius: 8, color: paused ? "#FFD93D" : "#777", padding: "9px 16px", fontFamily: "'Doto', sans-serif", fontSize: 14, fontWeight: 900, cursor: winner ? "not-allowed" : "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>
               {!started ? "START" : paused ? "GO" : "PAUSE"}
             </button>
           </div>
@@ -1038,7 +1060,7 @@ export default function App() {
         {highlightKick && (
           <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", zIndex: 30, background: "#FF6B6B15", border: "2px solid #FF6B6B", borderRadius: 12, padding: "10px 20px", display: "flex", alignItems: "center", gap: 14, backdropFilter: "blur(8px)", boxShadow: "0 8px 32px rgba(255, 107, 107, 0.15)" }}>
             <span style={{ color: "#FF6B6B", fontSize: 13, fontWeight: 900, letterSpacing: 1 }}>💀 SELECT PLAYER TO KICK OUT</span>
-            <button onClick={handleCancelDhappa} style={{ background: "#FF6B6B", border: "none", borderRadius: 6, color: "#fff", padding: "4px 10px", fontFamily: "Impact, sans-serif", fontSize: 11, fontWeight: 900, cursor: "pointer" }}>CANCEL</button>
+            <button onClick={handleCancelDhappa} style={{ background: "#FF6B6B", border: "none", borderRadius: 6, color: "#fff", padding: "4px 10px", fontFamily: "'Doto', sans-serif", fontSize: 11, fontWeight: 900, cursor: "pointer" }}>CANCEL</button>
           </div>
         )}
 
@@ -1077,15 +1099,17 @@ export default function App() {
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
             const nameFontSize = baseScale * 0.034;
-            const nameR = centerR + nameFontSize * 0.38;
-            const nameInset = Math.min((angle2 - angle1) * 0.18, 0.18);
+            // Place arc just outside center circle so names wrap around it facing inward
+            const nameR = centerR + nameFontSize * 1.1;
+            const nameInset = Math.min((angle2 - angle1) * 0.08, 0.12);
             const nameStartAngle = angle1 + nameInset;
             const nameEndAngle = angle2 - nameInset;
             const nameLargeArc = (nameEndAngle - nameStartAngle) > Math.PI ? 1 : 0;
-            const nameStartX = cx + nameR * Math.cos(nameStartAngle);
-            const nameStartY = cy + nameR * Math.sin(nameStartAngle);
-            const nameEndX = cx + nameR * Math.cos(nameEndAngle);
-            const nameEndY = cy + nameR * Math.sin(nameEndAngle);
+            // Draw arc counterclockwise (end→start, sweep=0) so text baseline faces center
+            const nameStartX = cx + nameR * Math.cos(nameEndAngle);
+            const nameStartY = cy + nameR * Math.sin(nameEndAngle);
+            const nameEndX = cx + nameR * Math.cos(nameStartAngle);
+            const nameEndY = cy + nameR * Math.sin(nameStartAngle);
             const namePathId = `name-ring-${origIdx}`;
 
             return (
@@ -1105,9 +1129,10 @@ export default function App() {
                   style={{ transition: "fill .3s,stroke .3s" }}
                 />
                 <defs>
-                  <path id={namePathId} d={`M ${nameStartX} ${nameStartY} A ${nameR} ${nameR} 0 ${nameLargeArc} 1 ${nameEndX} ${nameEndY}`} fill="none" />
+                  {/* Arc drawn end→start (sweep-flag=0) so text baseline faces center */}
+                  <path id={namePathId} d={`M ${nameStartX} ${nameStartY} A ${nameR} ${nameR} 0 ${nameLargeArc} 0 ${nameEndX} ${nameEndY}`} fill="none" />
                 </defs>
-                <text fontFamily="Impact, sans-serif"
+                <text fontFamily="'Doto', sans-serif"
                   fontSize={nameFontSize}
                   fontWeight={900}
                   fill="#000000"
@@ -1120,11 +1145,11 @@ export default function App() {
                   </textPath>
                 </text>
                 <g transform={`translate(${tx},${ty}) rotate(${deg})`}>
-                  <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="Impact, sans-serif" style={{ letterSpacing: 1 }}>
+                  <text textAnchor="middle" dominantBaseline="middle" fontSize={timerFontSize} fontWeight={900} fill={dispColor} fontFamily="'Doto', sans-serif" style={{ letterSpacing: 1 }}>
                     {formatTime(t)}
                   </text>
                   {isKickHighlight && (
-                    <text textAnchor="middle" dominantBaseline="middle" fontSize={baseScale * 0.022} fill="#FF6B6B" stroke="rgba(0,0,0,0.85)" strokeWidth={baseScale * 0.009} paintOrder="stroke fill" fontFamily="Impact, sans-serif" dy={baseScale * 0.06} style={{ animation: "pulse 1.5s infinite" }}>TAP TO KICK</text>
+                    <text textAnchor="middle" dominantBaseline="middle" fontSize={baseScale * 0.022} fill="#FF6B6B" stroke="rgba(0,0,0,0.85)" strokeWidth={baseScale * 0.009} paintOrder="stroke fill" fontFamily="'Doto', sans-serif" dy={baseScale * 0.06} style={{ animation: "pulse 1.5s infinite" }}>TAP TO KICK</text>
                   )}
                 </g>
               </g>
@@ -1179,7 +1204,7 @@ export default function App() {
             stroke="rgba(0,0,0,0.85)"
             strokeWidth={baseScale * 0.010}
             paintOrder="stroke fill"
-            fontFamily="Impact, sans-serif"
+            fontFamily="'Doto', sans-serif"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
             style={{ cursor: "pointer", letterSpacing: 0, transition: "fill .15s" }}>
@@ -1189,7 +1214,7 @@ export default function App() {
             fontSize={dhappaFontSize * 0.22} fontWeight={900}
             fill={centerHovered ? "#ff9999" : "#FF6B6B"}
             stroke="rgba(0,0,0,0.85)" strokeWidth={baseScale * 0.010} paintOrder="stroke fill"
-            fontFamily="Impact, sans-serif"
+            fontFamily="'Doto', sans-serif"
             onClick={handleDhappa}
             onMouseEnter={() => setCenterHovered(true)} onMouseLeave={() => setCenterHovered(false)}
             style={{ cursor: "pointer", letterSpacing: 1, transition: "fill .15s", opacity: 0.9 }}>
@@ -1219,21 +1244,21 @@ export default function App() {
                 </div>
               </div>
 
-              <button onClick={handleIWon} style={{ width: "100%", padding: "20px 0", borderRadius: 12, background: "#6BCB7722", border: "2px solid #6BCB77", color: "#6BCB77", fontFamily: "Impact, sans-serif", fontSize: 18, fontWeight: 900, cursor: "pointer", marginBottom: 8, letterSpacing: 1 }}>
+              <button onClick={handleIWon} style={{ width: "100%", padding: "20px 0", borderRadius: 12, background: "#6BCB7722", border: "2px solid #6BCB77", color: "#6BCB77", fontFamily: "'Doto', sans-serif", fontSize: 18, fontWeight: 900, cursor: "pointer", marginBottom: 8, letterSpacing: 1 }}>
                 I WON 🏆
               </button>
               <div style={{ color: "#6BCB7799", fontSize: 14, fontWeight: 900, marginBottom: 22, letterSpacing: 1 }}>
                 Awards you: <strong style={{ color: "#6BCB77" }}>+{nextIWonPoints} pts</strong>
               </div>
 
-              <button onClick={handleKickSomeone} style={{ width: "100%", padding: "20px 0", borderRadius: 12, background: "#FF6B6B22", border: "2px solid #FF6B6B", color: "#FF6B6B", fontFamily: "Impact, sans-serif", fontSize: 18, fontWeight: 900, cursor: "pointer", marginBottom: 8, letterSpacing: 1 }}>
+              <button onClick={handleKickSomeone} style={{ width: "100%", padding: "20px 0", borderRadius: 12, background: "#FF6B6B22", border: "2px solid #FF6B6B", color: "#FF6B6B", fontFamily: "'Doto', sans-serif", fontSize: 18, fontWeight: 900, cursor: "pointer", marginBottom: 8, letterSpacing: 1 }}>
                 KICK SOMEONE 💀
               </button>
               <div style={{ color: "#FF6B6B99", fontSize: 14, fontWeight: 900, marginBottom: 22, letterSpacing: 1 }}>
                 Awards you: <strong style={{ color: "#FF6B6B" }}>+{KICK_POINTS} pts</strong> · kicked player gets 0
               </div>
 
-              <button onClick={handleCancelDhappa} style={{ width: "100%", padding: "14px 0", borderRadius: 10, background: "none", border: "2px solid #333", color: "#666", fontFamily: "Impact, sans-serif", fontSize: 15, fontWeight: 900, cursor: "pointer", letterSpacing: 2 }}>CANCEL</button>
+              <button onClick={handleCancelDhappa} style={{ width: "100%", padding: "14px 0", borderRadius: 10, background: "none", border: "2px solid #333", color: "#666", fontFamily: "'Doto', sans-serif", fontSize: 15, fontWeight: 900, cursor: "pointer", letterSpacing: 2 }}>CANCEL</button>
             </div>
           </div>
         )}
