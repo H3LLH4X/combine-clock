@@ -342,7 +342,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             <div style={{ position: "relative", width: "320px", height: "320px", margin: "0 auto", background: "#050508", borderRadius: "50%", border: "1px dashed #222" }}>
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", color: "#111", fontSize: 14, pointerEvents: "none", letterSpacing: 2 }}>CLOCK DIAL</div>
               {Array.from({ length: n }, (_, i) => {
-                const angle = -Math.PI / 2 + (2 * Math.PI * (i + 0.5)) / n;
+                const angle = -Math.PI / 4 - (2 * Math.PI * i) / n;
                 const r = 100;
                 const cx = 160;
                 const cy = 160;
@@ -454,7 +454,6 @@ export default function App() {
 
   const [roundNum, setRoundNum] = useState(1);
   const [targetScore, setTargetScore] = useState(11);
-  const [turnDirection, setTurnDirection] = useState("counterclockwise");
   const [cumulativeScores, setCumulativeScores] = useState({});
   const [allPlayers, setAllPlayers] = useState([]);
   const [roundEvents, setRoundEvents] = useState([]);
@@ -541,9 +540,9 @@ export default function App() {
     setRoundStartInfo({ roundNum: nextRoundNum, starterName: names[startPlayerIdx], starterColor: COLORS[startPlayerIdx], startPlayerIdx });
     setShowRoundStart(true);
 
-    setConfig({ n, secs, names, turnDirection });
+    setConfig({ n, secs, names });
     setScreen("game");
-  }, [roundNum, allPlayers, turnDirection]);
+  }, [roundNum, allPlayers]);
 
   const handleRoundStartClose = useCallback(() => {
     setShowRoundStart(false);
@@ -609,14 +608,12 @@ export default function App() {
     const current = turnIndicatorRotationRef.current;
     const normalizedCurrent = ((current % 360) + 360) % 360;
     const normalizedTarget = ((activeSectorMidDeg % 360) + 360) % 360;
-    const clockwiseDelta = (normalizedTarget - normalizedCurrent + 360) % 360;
     const counterDelta = -((normalizedCurrent - normalizedTarget + 360) % 360);
-    const delta = turnDirection === "clockwise" ? clockwiseDelta : counterDelta;
-    if (Math.abs(delta) < 0.001) return;
+    if (Math.abs(counterDelta) < 0.001) return;
 
-    turnIndicatorRotationRef.current = current + delta;
+    turnIndicatorRotationRef.current = current + counterDelta;
     setTurnIndicatorRotation(turnIndicatorRotationRef.current);
-  }, [activeSectorMidDeg, turnDirection]);
+  }, [activeSectorMidDeg]);
 
   useEffect(() => {
     if (!started || !players.length) return;
@@ -629,10 +626,9 @@ export default function App() {
     const alive = players.reduce((acc, p, i) => p.alive ? [...acc, i] : acc, []);
     if (alive.length <= 1) return;
     const curPos = alive.indexOf(fromGlobal ?? curGlobalIdx);
-    const step = turnDirection === "clockwise" ? 1 : -1;
-    const nextPos = (curPos + step + alive.length) % alive.length;
+    const nextPos = (curPos - 1 + alive.length) % alive.length;
     setActiveIdx(nextPos);
-  }, [started, paused, winner, popup, players, curGlobalIdx, turnDirection]);
+  }, [started, paused, winner, popup, players, curGlobalIdx]);
 
   const resetGame = useCallback(() => {
     clearInterval(intervalRef.current);
@@ -651,7 +647,6 @@ export default function App() {
     setRoundResult(null);
     setRoundNum(1);
     setTargetScore(11);
-    setTurnDirection("counterclockwise");
     setCumulativeScores({});
     setAllPlayers([]);
     setRoundEvents([]);
@@ -966,11 +961,6 @@ export default function App() {
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => { setPaused(true); setPopup(null); setConfig(null); setScreen("setup"); }} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>← SETUP</button>
             <button onClick={resetGame} style={{ background: "#05050899", border: "2px solid #333", borderRadius: 8, color: "#FF6B6B", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>RESET</button>
-            <button onClick={() => { if (!started) { setStarted(true); setPaused(false); return; } setPaused(p => !p); }}
-              disabled={!!winner}
-              style={{ background: paused ? "#FFD93D22" : "#05050899", border: `2px solid ${paused ? "#FFD93D" : "#333"}`, borderRadius: 8, color: paused ? "#FFD93D" : "#777", padding: "9px 16px", fontFamily: "Impact, sans-serif", fontSize: 14, fontWeight: 900, cursor: winner ? "not-allowed" : "pointer", letterSpacing: 1, backdropFilter: "blur(4px)" }}>
-              {!started ? "START" : paused ? "GO" : "PAUSE"}
-            </button>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <div style={{ color: "#444", fontSize: 13, fontWeight: 900, letterSpacing: 2 }}>R{roundNum - 1}</div>
@@ -1021,17 +1011,16 @@ export default function App() {
             const t = times[globalIdx];
             const dispColor = isLow ? "#3a0000" : player.vdark;
 
-            const nameFontSize = baseScale * 0.034;
-            const nameR = centerR + nameFontSize * 0.38;
-            const nameInset = Math.min((angle2 - angle1) * 0.18, 0.18);
-            const nameStartAngle = angle1 + nameInset;
-            const nameEndAngle = angle2 - nameInset;
-            const nameLargeArc = (nameEndAngle - nameStartAngle) > Math.PI ? 1 : 0;
-            const nameStartX = cx + nameR * Math.cos(nameStartAngle);
-            const nameStartY = cy + nameR * Math.sin(nameStartAngle);
-            const nameEndX = cx + nameR * Math.cos(nameEndAngle);
-            const nameEndY = cy + nameR * Math.sin(nameEndAngle);
-            const namePathId = `name-ring-${origIdx}`;
+            const halfArc = Math.PI * 0.18;
+            const arcMid = midAngle;
+            const arcA1 = arcMid - halfArc;
+            const arcA2 = arcMid + halfArc;
+            const nr = centerR + baseScale * 0.008;
+            const sx = cx + nr * Math.cos(arcA1);
+            const sy = cy + nr * Math.sin(arcA1);
+            const ex = cx + nr * Math.cos(arcA2);
+            const ey = cy + nr * Math.sin(arcA2);
+            const namePathId = `namepath-${origIdx}`;
 
             return (
               <g key={globalIdx} onClick={() => {
@@ -1050,16 +1039,9 @@ export default function App() {
                   style={{ transition: "fill .3s,stroke .3s" }}
                 />
                 <defs>
-                  <path id={namePathId} d={`M ${nameStartX} ${nameStartY} A ${nameR} ${nameR} 0 ${nameLargeArc} 1 ${nameEndX} ${nameEndY}`} fill="none" />
+                  <path id={namePathId} d={`M ${sx} ${sy} A ${nr} ${nr} 0 0 1 ${ex} ${ey}`} fill="none" />
                 </defs>
-                <text fontFamily="Impact, sans-serif"
-                  fontSize={nameFontSize}
-                  fontWeight={900}
-                  fill="#000000"
-                  stroke="rgba(255,255,255,0.24)"
-                  strokeWidth={baseScale * 0.003}
-                  paintOrder="stroke fill"
-                  style={{ letterSpacing: "1px" }}>
+                <text fontFamily="Impact, sans-serif" fontSize={baseScale * 0.024} fontWeight={700} fill="#000000" style={{ letterSpacing: "1px" }}>
                   <textPath href={`#${namePathId}`} startOffset="50%" textAnchor="middle">
                     {player.name.toUpperCase()}
                   </textPath>
@@ -1183,6 +1165,40 @@ export default function App() {
           </div>
         )}
 
+      </div>
+
+      <div className="action-dashboard" style={{ position: "relative", background: "#050508", borderTop: "1px solid #111", overflow: "visible", paddingBottom: 24 }}>
+        <div style={{ display: "flex", gap: 12, padding: "14px 20px 12px", boxSizing: "border-box" }}>
+          <button onClick={() => {
+            if (!started) { setStarted(true); setPaused(false); return; }
+            passToNext(curGlobalIdx);
+          }} disabled={!!winner}
+            style={{ flex: 2, padding: "18px 0", borderRadius: 14, background: started ? `${players[curGlobalIdx]?.color ?? '#FF6B6B'}22` : "#FF6B6B22", border: `3px solid ${players[curGlobalIdx]?.color ?? '#FF6B6B'}`, color: players[curGlobalIdx]?.color ?? '#FF6B6B', fontFamily: "Impact, sans-serif", fontSize: 19, fontWeight: 900, cursor: "pointer", letterSpacing: 2 }}>
+            {started ? "PASS →" : "START / PASS →"}
+          </button>
+          <button onClick={() => { if (started) setPaused(p => !p); }}
+            disabled={!started || !!winner}
+            style={{ flex: 1, padding: "18px 0", borderRadius: 14, background: paused ? "#FFD93D22" : "#0a0a14", border: `3px solid ${paused ? "#FFD93D" : "#222"}`, color: paused ? "#FFD93D" : "#555", fontFamily: "Impact, sans-serif", fontSize: 17, fontWeight: 900, cursor: "pointer", letterSpacing: 1 }}>
+            {paused ? "▶ GO" : "⏸ PAUSE"}
+          </button>
+        </div>
+
+        {roundEvents.length > 0 && (
+          <div style={{ padding: "0 16px" }}>
+            <RoundProgress events={roundEvents} players={players} />
+          </div>
+        )}
+
+        {allPlayers.length > 0 && (
+          <div style={{ padding: "0 16px 16px" }}>
+            <Leaderboard
+              players={allPlayers}
+              cumulativeScores={cumulativeScores}
+              roundNum={roundNum - 1}
+              targetScore={targetScore}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
