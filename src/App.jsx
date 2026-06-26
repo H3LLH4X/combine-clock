@@ -2,6 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=Doto:wght@100..900&display=swap');`;
 
+function timerColor(hex) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (r < 128 || g < 128 || b < 128) ? "#ffffff" : "#000000";
+}
+
 const COLORS = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#C77DFF", "#FF9F1C"];
 const DARK =   ["#cc2222", "#cc9900", "#1e8c3a", "#1155cc", "#7722cc", "#cc5500"];
 const VDARK =  ["#3a0000", "#3a2800", "#003a10", "#00103a", "#1a003a", "#3a1500"];
@@ -329,10 +337,14 @@ function MatrixRain() {
   );
 }
 
+const DEFAULT_COLORS = ["#FF6B6B", "#FFD93D", "#6BCB77", "#4D96FF", "#C77DFF", "#FF9F1C"];
+
 function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roundNum, targetScore, onTargetChange }) {
   const [n, setN] = useState(existingPlayers?.length || 3);
   const [mins, setMins] = useState(2);
-  
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [playerColors, setPlayerColors] = useState(() => [...DEFAULT_COLORS]);
+
   const [names, setNames] = useState(() => {
     const initialList = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"];
     if (existingPlayers && existingPlayers.length) {
@@ -351,6 +363,27 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
     <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "#050508", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", fontFamily: "'Doto', sans-serif", fontWeight: 900, boxSizing: "border-box" }}>
       <style>{FONT_IMPORT}</style>
       <MatrixRain />
+
+      {/* Hamburger button */}
+      <button onClick={() => setMenuOpen(true)} style={{ position: "absolute", top: 18, right: 18, zIndex: 10, background: "rgba(10,10,20,0.7)", border: "1px solid #333", borderRadius: 8, padding: "8px 12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 5, backdropFilter: "blur(4px)" }}>
+        {[0,1,2].map(k => <div key={k} style={{ width: 22, height: 2, background: "#FF6B6B", borderRadius: 2 }} />)}
+      </button>
+
+      {/* Slide-in menu drawer */}
+      {menuOpen && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex" }}>
+          <div style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} onClick={() => setMenuOpen(false)} />
+          <div style={{ width: 260, background: "#0a0a14", borderLeft: "1px solid #222", padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ color: "#555", fontSize: 10, letterSpacing: 4, marginBottom: 8 }}>MENU</div>
+            <a href="https://mathbiceps.com" target="_blank" rel="noopener noreferrer"
+              style={{ display: "block", padding: "14px 18px", borderRadius: 10, background: "#FF6B6B22", border: "1px solid #FF6B6B55", color: "#FF6B6B", fontFamily: "'Doto', sans-serif", fontSize: 14, fontWeight: 900, letterSpacing: 2, textDecoration: "none", textAlign: "center" }}>
+              MATHBICEPS.COM ↗
+            </a>
+            <button onClick={() => setMenuOpen(false)} style={{ marginTop: "auto", padding: "10px", borderRadius: 8, background: "transparent", border: "1px solid #333", color: "#555", fontFamily: "'Doto', sans-serif", fontSize: 12, cursor: "pointer" }}>CLOSE ✕</button>
+          </div>
+        </div>
+      )}
+
       <div style={{ width: "100%", maxWidth: 440, position: "relative", zIndex: 1, padding: "2rem", boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
         <div style={{ textAlign: "center", marginBottom: hasHistory ? 16 : 32 }}>
           <div style={{ fontSize: 48, letterSpacing: 4, color: "#fff", fontWeight: 900 }}>DHAPPA</div>
@@ -413,23 +446,34 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
                   const x2i = svgCx + innerR * Math.cos(a2), y2i = svgCy + innerR * Math.sin(a2);
                   const large = sliceAngle > Math.PI ? 1 : 0;
                   const d = `M ${x1i} ${y1i} L ${x1o} ${y1o} A ${outerR} ${outerR} 0 ${large} 1 ${x2o} ${y2o} L ${x2i} ${y2i} A ${innerR} ${innerR} 0 ${large} 0 ${x1i} ${y1i} Z`;
-                  return <path key={i} d={d} fill={`${COLORS[i]}22`} stroke={`${COLORS[i]}55`} strokeWidth={1} />;
+                  return <path key={i} d={d} fill={`${playerColors[i]}22`} stroke={`${playerColors[i]}55`} strokeWidth={1} />;
                 })}
                 <circle cx="160" cy="160" r="48" fill="#050508" stroke="#1a1a2e" strokeWidth={1} />
                 <text x="160" y="160" textAnchor="middle" dominantBaseline="middle" fill="#222" fontSize="11" fontFamily="'Doto', sans-serif" letterSpacing="2">DHAPPA</text>
               </svg>
 
-              {/* Name inputs positioned in each sector */}
+              {/* Name inputs + color pickers positioned in each sector */}
               {Array.from({ length: n }, (_, i) => {
                 const angle = -Math.PI / 2 + (2 * Math.PI * (i + 0.5)) / n;
                 const r = 105;
                 const x = 160 + r * Math.cos(angle);
                 const y = 160 + r * Math.sin(angle);
+                const col = playerColors[i];
 
                 return (
                   <div key={i} style={{ position: "absolute", left: `${x}px`, top: `${y}px`, transform: "translate(-50%, -50%)", zIndex: 10, width: "90px" }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
-                      <span style={{ fontSize: "9px", color: COLORS[i], textShadow: "0 0 4px #000", fontFamily: "'Doto', monospace" }}>P{i + 1}</span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "3px", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: "9px", color: col, textShadow: "0 0 4px #000", fontFamily: "'Doto', monospace" }}>P{i + 1}</span>
+                        {/* Color picker swatch */}
+                        <label style={{ cursor: "pointer", position: "relative" }}>
+                          <div style={{ width: 12, height: 12, borderRadius: "50%", background: col, border: "1px solid rgba(255,255,255,0.3)", boxShadow: `0 0 4px ${col}` }} />
+                          <input type="color" value={col}
+                            onChange={e => setPlayerColors(prev => { const u = [...prev]; u[i] = e.target.value; return u; })}
+                            style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }}
+                          />
+                        </label>
+                      </div>
                       <input
                         value={names[i] ?? `Player ${i + 1}`}
                         onChange={e => {
@@ -440,7 +484,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
                             return updated;
                           });
                         }}
-                        style={{ width: "100%", background: "rgba(10,10,20,0.55)", border: `1px solid ${COLORS[i]}55`, borderLeft: `3px solid ${COLORS[i]}`, borderRadius: 4, padding: "4px 6px", color: COLORS[i], fontFamily: "'Doto', monospace", fontSize: "11px", outline: "none", textAlign: "center", boxSizing: "border-box", backdropFilter: "blur(4px)" }}
+                        style={{ width: "100%", background: "rgba(10,10,20,0.55)", border: `1px solid ${col}55`, borderLeft: `3px solid ${col}`, borderRadius: 4, padding: "4px 6px", color: col, fontFamily: "'Doto', monospace", fontSize: "11px", outline: "none", textAlign: "center", boxSizing: "border-box", backdropFilter: "blur(4px)" }}
                       />
                     </div>
                   </div>
@@ -449,7 +493,7 @@ function SetupScreen({ onStart, cumulativeScores, players: existingPlayers, roun
             </div>
           </div>
 
-          <button onClick={() => onStart({ n, secs: mins * 60, names: names.slice(0, n) })}
+          <button onClick={() => onStart({ n, secs: mins * 60, names: names.slice(0, n), colors: playerColors.slice(0, n) })}
             style={{ width: "100%", padding: 14, borderRadius: 12, background: "#FF6B6B", border: "none", color: "#fff", fontFamily: "'Doto', sans-serif", fontSize: 15, fontWeight: 900, letterSpacing: 2, cursor: "pointer" }}>
             {hasHistory ? `START ROUND ${roundNum} →` : "START →"}
           </button>
@@ -575,8 +619,9 @@ export default function App() {
     });
   }, [targetScore, allPlayers, players, gameWinner]);
 
-  const startGame = useCallback(({ n, secs, names }) => {
-    const ps = names.map((name, i) => ({ name, color: COLORS[i], dark: DARK[i], vdark: VDARK[i], alive: true, originalIdx: i }));
+  const startGame = useCallback(({ n, secs, names, colors }) => {
+    const resolvedColors = colors || COLORS;
+    const ps = names.map((name, i) => ({ name, color: resolvedColors[i] || COLORS[i], dark: DARK[i], vdark: VDARK[i], alive: true, originalIdx: i }));
     setPlayers(ps);
     setTimes(Array(n).fill(secs));
     
@@ -615,7 +660,7 @@ export default function App() {
       }
     }
 
-    setRoundStartInfo({ roundNum: nextRoundNum, starterName: names[startPlayerIdx], starterColor: COLORS[startPlayerIdx], startPlayerIdx });
+    setRoundStartInfo({ roundNum: nextRoundNum, starterName: names[startPlayerIdx], starterColor: resolvedColors[startPlayerIdx] || COLORS[startPlayerIdx], startPlayerIdx });
     setShowRoundStart(true);
 
     setConfig({ n, secs, names, turnDirection });
@@ -1096,7 +1141,7 @@ export default function App() {
             const ty = cy + timeR * Math.sin(midAngle);
             const deg = (midAngle * 180 / Math.PI) - 90;
             const t = times[globalIdx];
-            const dispColor = isLow ? "#3a0000" : player.vdark;
+            const dispColor = isLow ? "#ff0000" : timerColor(player.color);
 
             const nameFontSize = baseScale * 0.034;
             // Place arc just outside center circle so names wrap around it facing inward
