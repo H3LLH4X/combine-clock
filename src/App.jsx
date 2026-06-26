@@ -310,9 +310,11 @@ function MatrixRain() {
       cols = Math.floor(canvas.width / fontSize);
       if (drops.length !== cols) drops = Array(cols).fill(1);
 
+      const RAIN_COLORS = ["#FF3333", "#33FF33", "#3399FF"];
       drops.forEach((y, i) => {
         const char = chars[Math.floor(Math.random() * chars.length)];
-        ctx.fillStyle = i % 5 === 0 ? "#FF6B6B" : "#3a0010";
+        const baseColor = RAIN_COLORS[i % 3];
+        ctx.fillStyle = i % 5 === 0 ? baseColor : baseColor + "55";
         ctx.font = `${fontSize}px 'Doto'`;
         ctx.fillText(char, i * fontSize, y * fontSize);
         if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
